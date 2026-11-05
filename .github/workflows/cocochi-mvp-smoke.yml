@@ -1,0 +1,33 @@
+name: COCOCHI MVP smoke
+
+on:
+  push:
+    branches: ["main", "cocochi-mvp"]
+    paths:
+      - "**"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m compileall server.py
+      - name: Start app
+        run: |
+          uvicorn server:app --host 127.0.0.1 --port 8000 > /tmp/cocochi.log 2>&1 &
+          echo $! > /tmp/cocochi.pid
+          sleep 3
+      - name: Smoke endpoints
+        run: |
+          curl --fail http://127.0.0.1:8000/healthz
+          curl --fail http://127.0.0.1:8000/app > /tmp/cocochi.html
+          grep -q "COCOCHI" /tmp/cocochi.html
+          curl --fail http://127.0.0.1:8000/tonconnect-manifest.json
+      - name: Show logs on failure
+        if: failure()
+        run: cat /tmp/cocochi.log || true
