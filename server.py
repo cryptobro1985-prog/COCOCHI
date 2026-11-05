@@ -9,7 +9,7 @@ from urllib.parse import parse_qsl
 
 import httpx
 from fastapi import FastAPI, Header, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -20,6 +20,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
 WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET", "").strip()
 APP_NAME = os.getenv("APP_NAME", "COCOCHI")
+APP_VERSION = "6"
 
 BOT_USERNAME = ""
 BOOT_STATUS = {
@@ -88,6 +89,10 @@ async def configure_webhook() -> None:
         print("COCOCHI_BOOT webhook=FAILED", flush=True)
 
 
+def app_url(base: str) -> str:
+    return f"{base}/app?v={APP_VERSION}"
+
+
 async def configure_bot_ui() -> None:
     if not BOT_TOKEN:
         print("COCOCHI_BOOT commands=SKIP no_token", flush=True)
@@ -118,12 +123,12 @@ async def configure_bot_ui() -> None:
                 "menu_button": {
                     "type": "web_app",
                     "text": "Играть в COCOCHI",
-                    "web_app": {"url": f"{PUBLIC_BASE_URL}/app"},
+                    "web_app": {"url": app_url(PUBLIC_BASE_URL)},
                 }
             },
         )
         BOOT_STATUS["menu_button"] = True
-        print("COCOCHI_BOOT menu_button=OK", flush=True)
+        print(f"COCOCHI_BOOT menu_button=OK url={app_url(PUBLIC_BASE_URL)}", flush=True)
     except Exception:
         print("COCOCHI_BOOT menu_button=FAILED", flush=True)
 
@@ -138,35 +143,49 @@ async def lifespan(app: FastAPI):
         f"bot={BOOT_STATUS['bot_identity']} "
         f"webhook={BOOT_STATUS['webhook']} "
         f"commands={BOOT_STATUS['commands']} "
-        f"menu={BOOT_STATUS['menu_button']}",
+        f"menu={BOOT_STATUS['menu_button']} version={APP_VERSION}",
         flush=True,
     )
     yield
 
 
-app = FastAPI(title="COCOCHI MVP", version="0.1.2", lifespan=lifespan)
+app = FastAPI(title="COCOCHI MVP", version="0.1.3", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
-@app.get("/")
-async def root():
-    return RedirectResponse("/app")
+@app.api_route("/", methods=["GET", "HEAD"])
+async def root(request: Request):
+    if request.method == "HEAD":
+        return Response(status_code=200)
+    return RedirectResponse(f"/app?v={APP_VERSION}")
 
 
-@app.get("/app")
-async def mini_app():
-    return FileResponse(STATIC_DIR / "index.html")
+@app.api_route("/app", methods=["GET", "HEAD"])
+async def mini_app(request: Request):
+    if request.method == "HEAD":
+        return Response(status_code=200, media_type="text/html")
+    return FileResponse(
+        STATIC_DIR / "index.html",
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"},
+    )
 
 
 @app.get("/healthz")
 async def health():
+    home = STATIC_DIR / "cocochi-home.webp"
+    market = STATIC_DIR / "cocochi-market.webp"
     return {
         "ok": True,
         "app": APP_NAME,
+        "version": APP_VERSION,
         "bot_configured": bool(BOT_TOKEN),
         "public_base_url_configured": bool(PUBLIC_BASE_URL),
         "bot_username": BOT_USERNAME or None,
         "telegram": BOOT_STATUS,
+        "assets": {
+            "home_bytes": home.stat().st_size if home.exists() else 0,
+            "market_bytes": market.stat().st_size if market.exists() else 0,
+        },
     }
 
 
@@ -249,8 +268,8 @@ async def ton_manifest(request: Request):
             "url": base,
             "name": APP_NAME,
             "iconUrl": f"{base}/static/cocochi-icon.svg",
-            "termsOfUseUrl": f"{base}/app",
-            "privacyPolicyUrl": f"{base}/app",
+            "termsOfUseUrl": app_url(base),
+            "privacyPolicyUrl": app_url(base),
         }
     )
 
@@ -310,7 +329,7 @@ async def telegram_webhook(
                 [
                     {
                         "text": "🐔 Играть в COCOCHI",
-                        "web_app": {"url": f"{base}/app"},
+                        "web_app": {"url": app_url(base)},
                     }
                 ]
             ]
