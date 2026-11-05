@@ -31,6 +31,7 @@ claims = Table('task_claims', meta, Column('user_id', BigInteger, primary_key=Tr
 daily = Table('daily_rewards', meta, Column('user_id', BigInteger, primary_key=True), Column('day', String(10), primary_key=True), Column('created_at', BigInteger, nullable=False))
 items = Table('user_items', meta, Column('user_id', BigInteger, primary_key=True), Column('sku', String(40), primary_key=True), Column('created_at', BigInteger, nullable=False))
 sessions = Table('sessions', meta, Column('token_hash', String(64), primary_key=True), Column('user_id', BigInteger, nullable=False), Column('expires_at', BigInteger, nullable=False))
+options_subscriptions = Table('options_subscriptions', meta, Column('chat_id', BigInteger, primary_key=True), Column('created_at', BigInteger, nullable=False))
 audit = Table('audit_log', meta, Column('id', String(36), primary_key=True), Column('user_id', BigInteger, nullable=False), Column('action', String(40), nullable=False), Column('reference_id', String(100), nullable=False), Column('created_at', BigInteger, nullable=False))
 economy_config = Table('economy_config', meta, Column('version', Integer, primary_key=True), Column('config', Text, nullable=False))
 # Disabled settlement scaffold: no automated signing or pretend confirmations.
