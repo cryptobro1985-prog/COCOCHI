@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#090512">
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
   <title>COCOCHI</title>
-  <link rel="stylesheet" href="/static/v2.css?v=7">
+  <link rel="stylesheet" href="/static/v2.css?v=8">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -17,17 +17,18 @@
       <span><b>COCOCHI</b><small>MY CHICKEN</small></span>
     </button>
     <div class="top-balances">
-      <button class="balance-chip ton-chip" data-action="wallet"><span>💎</span><b id="tonBalance">1.25</b><small>TON</small></button>
-      <div class="balance-chip egg-chip"><span>🥚</span><b id="eggBalance">12 480</b><small>EGGS</small></div>
+      <button class="balance-chip ton-chip" data-action="wallet"><span>💎</span><b id="tonBalance">—</b><small>TON</small></button>
+      <div class="balance-chip egg-chip"><span>🥚</span><b id="eggBalance">—</b><small>EGGS</small></div>
     </div>
   </header>
 
+  <p id="sessionStatus" class="session-status" role="status">Подключаемся к серверу…</p>
   <main class="screen-stack" id="screenStack">
 
     <section class="screen active" data-screen="home">
       <div class="hero hero-home">
-        <img src="/static/cocochi-home.webp?v=7" alt="Люся COCOCHI" class="hero-art">
-        <div class="hero-vignette"></div>
+        <img src="/static/cocochi-home.webp?v=8" alt="Люся COCOCHI" class="hero-art">
+        <div class="hero-vignette"></div><div id="chickenScene" aria-label="Интерактивная 3D-курица" role="img"></div>
         <div class="hero-head">
           <div class="level-pill"><span>LV.</span><b id="homeLevel">12</b></div>
           <div class="mood-pill"><span>💖</span><b>Счастливая</b></div>
@@ -38,7 +39,7 @@
           <p><span class="online-dot"></span> несёт яйца прямо сейчас</p>
         </div>
         <div class="production-card">
-          <div><span>ГОТОВО К СБОРУ</span><strong><span id="pendingEggs">3 726</span> 🥚</strong></div>
+          <div><span>ГОТОВО К СБОРУ</span><strong><span id="pendingEggs">—</span> 🥚</strong></div>
           <div class="rate"><b id="rateValue">248</b><small>яиц/час</small></div>
           <button class="gold-button collect-button" data-action="collect">Собрать</button>
         </div>
@@ -47,12 +48,12 @@
       <div class="quick-grid">
         <button class="quick-card purple" data-route="rewards"><span class="quick-icon">🎁</span><b>Награды</b><small>Бонус готов</small><i>→</i></button>
         <button class="quick-card blue" data-route="tasks"><span class="quick-icon">⚡</span><b>Задания</b><small>3 активных</small><i>→</i></button>
-        <button class="quick-card orange" data-route="events"><span class="quick-icon">🏆</span><b>События</b><small>Egg Rush</small><i>→</i></button>
+        <button class="quick-card orange" data-route="events"><span class="quick-icon">🏆</span><b>События</b><small>Ежедневный Egg Rush</small><i>→</i></button>
         <button class="quick-card pink" data-route="wardrobe"><span class="quick-icon">👑</span><b>Гардероб</b><small>Новый образ</small><i>→</i></button>
       </div>
 
       <section class="panel care-panel">
-        <div class="section-title"><div><span class="eyebrow">УХОД</span><h2>Люсе нужен уход</h2></div><span class="tiny-pill">+15% бонус</span></div>
+        <div class="section-title"><div><span class="eyebrow">УХОД</span><h2>Люсе нужен уход</h2></div><span class="tiny-pill">Влияет на производство</span></div>
         <div class="care-grid">
           <button class="care-card" data-care="food">
             <div class="care-icon food">🌽</div><div><b>Еда</b><small><span id="foodValue">78</span>%</small></div>
@@ -78,35 +79,32 @@
 
     <section class="screen" data-screen="market">
       <div class="page-hero market-hero">
-        <img src="/static/cocochi-market.webp?v=7" alt="" class="page-art">
+        <img src="/static/cocochi-market.webp?v=8" alt="" class="page-art">
         <div class="page-overlay"></div>
         <div class="page-hero-content">
           <span class="eyebrow">COCOCHI ECONOMY</span>
           <h1>Egg Market</h1>
-          <p>Покупай и продавай яйца в DEMO-режиме.</p>
-          <div class="market-ticker"><span>1 🥚</span><strong>0.0042 TON</strong><em>+6.8%</em></div>
+          <p>Игровые яйца и внутренние монеты. Без денежных выплат.</p>
+          <div class="market-ticker"><span>1 🥚</span><strong>2 монеты</strong><em>Внутренний обмен</em></div>
         </div>
       </div>
       <div class="two-actions">
-        <button class="big-action sell" data-action="sell"><span>↗</span><div><small>ПРОДАТЬ</small><b>Яйца</b></div></button>
-        <button class="big-action buy" data-action="buy"><span>↙</span><div><small>КУПИТЬ</small><b>Яйца</b></div></button>
+        <button class="big-action sell" data-action="sell"><span>🥚</span><div><small>ПРОДАТЬ</small><b>Яйца</b></div></button>
+        <button class="big-action buy" data-action="buy"><span>⭐</span><div><small>КУПИТЬ</small><b>Яйца</b></div></button>
       </div>
       <section class="panel">
-        <div class="section-title"><div><span class="eyebrow">МОЙ БАЛАНС</span><h2><span id="marketEggs">12 480</span> 🥚</h2></div><span class="tiny-pill">DEMO</span></div>
+        <div class="section-title"><div><span class="eyebrow">МОЙ БАЛАНС</span><h2><span id="marketEggs">—</span> 🥚</h2></div><span class="tiny-pill">ИГРОВОЙ</span></div>
         <div class="limit-row"><span>Лимит покупки сегодня</span><b id="buyLimit">140 / 200</b></div>
         <div class="limit-row"><span>Лимит продажи сегодня</span><b id="sellLimit">4 / 25</b></div>
       </section>
-      <section class="panel">
-        <div class="section-title"><div><span class="eyebrow">БУСТЕРЫ</span><h2>Ускорь производство</h2></div></div>
-        <button class="upgrade-row" data-upgrade="production"><span class="upgrade-round gold">⚡</span><div><b>Производство</b><small>+10% яиц в час</small></div><strong>5 000 🥚</strong></button>
-        <button class="upgrade-row" data-upgrade="energy"><span class="upgrade-round blue">💫</span><div><b>Энергия</b><small>Быстрее восстанавливается</small></div><strong>3 500 🥚</strong></button>
-        <button class="upgrade-row" data-upgrade="health"><span class="upgrade-round pink">❤️</span><div><b>Здоровье</b><small>Стабильный бонус</small></div><strong>8 000 🥚</strong></button>
-      </section>
+      <section class="panel"><h2>Монеты: <span id="coinBalance">—</span></h2><p>Внутриигровые монеты не имеют денежного эквивалента.</p><h2>История операций</h2><div id="ledgerHistory"></div></section>
+      <section class="panel"><span class="eyebrow">МАГАЗИН УЛУЧШЕНИЙ</span><h2>Уютный курятник</h2><p>Каждое улучшение даёт +10% к базовому производству. До 10 улучшений.</p><button class="purple-button full" data-action="coopUpgrade" id="coopUpgradeBtn">Загрузка…</button></section>
+    </section>
     </section>
 
     <section class="screen" data-screen="coop">
       <div class="page-hero coop-hero">
-        <img src="/static/cocochi-home.webp?v=7" alt="" class="page-art art-right">
+        <img src="/static/cocochi-home.webp?v=8" alt="" class="page-art art-right">
         <div class="page-overlay"></div>
         <div class="page-hero-content">
           <span class="eyebrow">КУРЯТНИК</span>
@@ -117,19 +115,15 @@
       <div class="stat-grid">
         <div class="stat-card"><span>⭐</span><small>УРОВЕНЬ</small><b id="coopLevel">12</b></div>
         <div class="stat-card"><span>🥚</span><small>В ЧАС</small><b id="coopRate">248</b></div>
-        <div class="stat-card"><span>🔥</span><small>СЕРИЯ</small><b>7 дней</b></div>
+        <div class="stat-card"><span>🔥</span><small>СЕРИЯ</small><b>—</b></div>
       </div>
       <section class="panel level-panel">
         <div class="level-orb"><span>LV.</span><b id="upgradeLevel">13</b></div>
-        <div class="level-info"><span class="eyebrow">СЛЕДУЮЩИЙ УРОВЕНЬ</span><h2>Элитный курятник</h2><p>+12% к базовой продуктивности и новый визуальный эффект.</p></div>
+        <div class="level-info"><span class="eyebrow">СЛЕДУЮЩИЙ УРОВЕНЬ</span><h2>Элитный курятник</h2><p>+4 яйца в час к базовому производству.</p></div>
         <button class="gold-button full" data-action="levelUp">Улучшить · <span id="upgradeCost">2 500</span> 🥚</button>
       </section>
-      <section class="panel">
-        <div class="section-title"><div><span class="eyebrow">КОМФОРТ</span><h2>Состояние курятника</h2></div></div>
-        <div class="comfort-item"><span>🌡️</span><div><b>Температура</b><small>Идеальная</small></div><strong>24°C</strong></div>
-        <div class="comfort-item"><span>💡</span><div><b>Освещение</b><small>12 часов</small></div><strong>100%</strong></div>
-        <div class="comfort-item"><span>🛏️</span><div><b>Уют</b><small>Премиум</small></div><strong>92%</strong></div>
-      </section>
+      <section class="panel"><span class="eyebrow">КАК ЭТО РАБОТАЕТ</span><h2>Уход — больше яиц</h2><p>Еда, вода и чистота постепенно снижаются. При полном уходе производство составляет 100%, при нулевом — 25%. Офлайн учитываются последние 6 часов.</p></section>
+    </section>
     </section>
 
     <section class="screen" data-screen="friends">
@@ -141,13 +135,8 @@
           <p>Приглашай друзей и открывай совместные бустеры.</p>
         </div>
       </div>
-      <button class="invite-hero" data-action="invite"><span>👥</span><div><small>ТВОЙ БОНУС</small><b>+10% к производству</b><p>За каждого активного друга</p></div><i>Пригласить</i></button>
-      <section class="panel">
-        <div class="section-title"><div><span class="eyebrow">МОЯ КОМАНДА</span><h2>3 друга</h2></div><span class="tiny-pill success">+30%</span></div>
-        <div class="friend-row"><span class="avatar a1">🐥</span><div><b>Alex</b><small>LV. 8 · онлайн</small></div><strong>+10%</strong></div>
-        <div class="friend-row"><span class="avatar a2">🐔</span><div><b>Nikita</b><small>LV. 14 · 2 мин назад</small></div><strong>+10%</strong></div>
-        <div class="friend-row"><span class="avatar a3">🐣</span><div><b>Kate</b><small>LV. 5 · онлайн</small></div><strong>+10%</strong></div>
-      </section>
+      <button class="invite-hero" data-action="invite"><span>👥</span><div><small>ТВОЯ КОМАНДА</small><b>Играть вместе</b><p>Награда за первого приглашённого друга: 20 🥚</p></div><i>Пригласить</i></button>
+      <section class="panel"><h2 id="friendCount">0 приглашённых друзей</h2><p>Бонус доступен в заданиях после первого подтверждённого запуска друга.</p></section>
       <section class="panel referral-panel">
         <span class="eyebrow">РЕФЕРАЛЬНАЯ ССЫЛКА</span>
         <code id="refLink">Открой COCOCHI внутри Telegram</code>
@@ -166,21 +155,21 @@
         <div class="wallet-glow"></div>
         <div class="section-title"><div><span class="eyebrow">TON WALLET</span><h2>Подключи кошелёк</h2></div><span class="wallet-status">● SAFE</span></div>
         <p>Приложение не получает seed-фразу или приватный ключ.</p>
-        <div id="tonConnectMount" class="ton-mount"></div>
+        <div id="tonConnectMount" class="ton-mount"></div><p id="walletAddress">Кошелёк не подключён</p><button class="ghost-button full" data-action="disconnect">Отключить кошелёк</button><button class="ghost-button full" data-action="testTransaction">Тестовый перевод себе · testnet</button><p id="tonTransactionStatus" role="status">Транзакций пока нет</p>
         <button class="purple-button full" data-action="wallet">Подключить TON</button>
       </section>
       <section class="panel settings-panel">
         <button class="setting-row" data-action="language"><span>🌐</span><div><b>Язык</b><small>Русский</small></div><i>›</i></button>
-        <button class="setting-row" data-route="wardrobe"><span>👑</span><div><b>Мой гардероб</b><small>6 предметов</small></div><i>›</i></button>
-        <button class="setting-row" data-route="rewards"><span>🎁</span><div><b>История наград</b><small>12 получено</small></div><i>›</i></button>
-        <button class="setting-row danger" data-action="reset"><span>↻</span><div><b>Сбросить DEMO</b><small>Начать заново</small></div><i>›</i></button>
+        <button class="setting-row" data-route="wardrobe"><span>👑</span><div><b>Мой гардероб</b><small>Серверный инвентарь</small></div><i>›</i></button>
+        <button class="setting-row" data-route="rewards"><span>🎁</span><div><b>История наград</b><small>Серверная история</small></div><i>›</i></button>
+        <button class="setting-row" data-action="payments"><span>↻</span><div><b>История платежей</b><small>Хранится на сервере</small></div><i>›</i></button>
       </section>
     </section>
 
     <section class="screen sub-screen" data-screen="tasks">
       <div class="sub-header"><button data-back>‹</button><div><span class="eyebrow">COCOCHI</span><h1>Задания</h1></div><span class="sub-icon">⚡</span></div>
       <div class="task-feature">
-        <span class="task-feature-icon">🏆</span><div><small>НЕДЕЛЬНАЯ ЦЕЛЬ</small><b>5 / 7 выполнено</b><div class="task-progress"><i style="width:71%"></i></div></div><strong>+2 000 🥚</strong>
+        <span class="task-feature-icon">🏆</span><div><small>НЕДЕЛЬНАЯ ЦЕЛЬ</small><b>Первые шаги</b><div class="task-progress"><i style="width:0%"></i></div></div><strong>Играй и получай</strong>
       </div>
       <div class="task-list">
         <button class="task-card" data-task="care"><span class="task-icon green">✨</span><div><b>Позаботься о Люсе</b><small>Покорми, напои или почисти</small></div><em>+250 🥚</em><i class="claim">Забрать</i></button>
@@ -192,24 +181,21 @@
     <section class="screen sub-screen" data-screen="rewards">
       <div class="sub-header"><button data-back>‹</button><div><span class="eyebrow">БОНУСЫ</span><h1>Награды</h1></div><span class="sub-icon">🎁</span></div>
       <div class="reward-chest">
-        <div class="reward-rays"></div><span class="chest">🎁</span><span class="eyebrow">ЕЖЕДНЕВНАЯ НАГРАДА</span><h2>День 7</h2><p>Твоя серия растёт. Сегодня особенный бонус.</p><strong>2 500 🥚 + 1 💎</strong>
+        <div class="reward-rays"></div><span class="chest">🎁</span><span class="eyebrow">ЕЖЕДНЕВНАЯ НАГРАДА</span><h2>Каждый день</h2><p>Одна награда в сутки по серверному времени UTC.</p><strong>30 🥚</strong>
         <button class="gold-button full" data-action="dailyReward" id="dailyRewardBtn">Забрать награду</button>
       </div>
-      <div class="week-row"><span class="done">1<br><b>✓</b></span><span class="done">2<br><b>✓</b></span><span class="done">3<br><b>✓</b></span><span class="done">4<br><b>✓</b></span><span class="done">5<br><b>✓</b></span><span class="done">6<br><b>✓</b></span><span class="today">7<br><b>🎁</b></span></div>
+
     </section>
 
     <section class="screen sub-screen" data-screen="events">
       <div class="sub-header"><button data-back>‹</button><div><span class="eyebrow">LIVE</span><h1>События</h1></div><span class="sub-icon">🏆</span></div>
-      <article class="event-card event-primary">
-        <div class="event-graphic">🥚⚡🥚</div><span class="event-live">LIVE · 02:14:38</span><h2>EGG RUSH</h2><p>Двойное производство на протяжении события. Собери как можно больше яиц.</p><div class="event-prize"><span>Твой результат</span><b>18 420 🥚</b></div><button class="gold-button full" data-action="joinEvent">Участвовать</button>
-      </article>
-      <article class="event-card event-purple"><div class="event-graphic">👑</div><span>СКОРО</span><h2>ROYAL COCOCHI</h2><p>Сезонный турнир гардероба и редких предметов.</p><button class="ghost-button full">Подробнее</button></article>
+      <article class="event-card event-primary"><div class="event-graphic">🥚⚡🥚</div><span id="eventTime">ЕЖЕДНЕВНОЕ ИСПЫТАНИЕ</span><h2>EGG RUSH</h2><p>Вступи за 10 монет и собери 100 произведённых яиц до конца суток UTC. Награда: 35 яиц.</p><div class="event-prize"><span>Прогресс</span><b id="eventProgress">0 / 100 🥚</b></div><button class="gold-button full" id="eventButton" data-action="joinEvent">Участвовать · 10 монет</button></article>
     </section>
 
     <section class="screen sub-screen" data-screen="wardrobe">
       <div class="sub-header"><button data-back>‹</button><div><span class="eyebrow">СТИЛЬ</span><h1>Гардероб</h1></div><span class="sub-icon">👑</span></div>
       <div class="wardrobe-preview">
-        <img src="/static/cocochi-home.webp?v=7" alt="Люся" class="wardrobe-art">
+        <img src="/static/cocochi-home.webp?v=8" alt="Люся" class="wardrobe-art">
         <div class="wardrobe-caption"><span>ТЕКУЩИЙ ОБРАЗ</span><b id="outfitName">Royal Neon</b></div>
       </div>
       <div class="outfit-grid">
@@ -245,6 +231,7 @@
   <div class="toast" id="toast" aria-live="polite"></div>
   <div class="burst" id="burst"></div>
 </div>
-<script type="module" src="/static/v2.js?v=7"></script>
+<script type="module" src="/static/v2.js?v=8"></script>
+<script type="module" src="/static/chicken.js?v=8"></script>
 </body>
 </html>

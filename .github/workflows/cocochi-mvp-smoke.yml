@@ -1,33 +1,34 @@
-name: COCOCHI MVP smoke
-
+name: COCOCHI tests
 on:
   push:
-    branches: ["main", "cocochi-mvp"]
-    paths:
-      - "**"
+  pull_request:
   workflow_dispatch:
-
 jobs:
-  smoke:
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        database: [sqlite, postgres]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: cocochi_qa
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install -r requirements.txt
-      - run: python -m compileall server.py
-      - name: Start app
-        run: |
-          uvicorn server:app --host 127.0.0.1 --port 8000 > /tmp/cocochi.log 2>&1 &
-          echo $! > /tmp/cocochi.pid
-          sleep 3
-      - name: Smoke endpoints
-        run: |
-          curl --fail http://127.0.0.1:8000/healthz
-          curl --fail http://127.0.0.1:8000/app > /tmp/cocochi.html
-          grep -q "COCOCHI" /tmp/cocochi.html
-          curl --fail http://127.0.0.1:8000/tonconnect-manifest.json
-      - name: Show logs on failure
-        if: failure()
-        run: cat /tmp/cocochi.log || true
+      - run: python -m pip check
+      - run: python -m unittest discover -s tests -v
+        env:
+          TEST_DATABASE_URL: ${{ matrix.database == 'postgres' && 'postgresql+psycopg://postgres@127.0.0.1:5432/cocochi_qa' || '' }}
+      - run: python scripts/simulate_economy.py

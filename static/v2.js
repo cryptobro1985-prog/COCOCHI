@@ -1,131 +1,176 @@
-const tg=window.Telegram?.WebApp;
-try{tg?.ready();tg?.expand();tg?.setHeaderColor("#090512");tg?.setBackgroundColor("#090512")}catch(_){}
-
-const defaultState=()=>({
-  level:12,eggs:12480,pending:3726,food:78,water:64,clean:82,demoTon:1.25,
-  dailyBuyUsed:140,dailySellUsed:4,rewardClaimed:false,outfit:"Royal Neon",
-  completedTasks:{},lastTick:Date.now(),rate:248
-});
-let state;
-try{state={...defaultState(),...JSON.parse(localStorage.getItem("cocochi.v7")||"{}")}}catch(_){state=defaultState()}
-state.completedTasks=state.completedTasks||{};
-let config={botUsername:"cocochi_bot"},session={demo:true,user:null},previousRoute="home",currentRoute="home",marketMode="buy",tonUI=null,toastTimer;
-
-const $=id=>document.getElementById(id);
-const fmt=n=>Math.floor(Number(n)||0).toLocaleString("ru-RU");
-const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-const persist=()=>localStorage.setItem("cocochi.v7",JSON.stringify(state));
-const haptic=(kind="light")=>{try{tg?.HapticFeedback?.impactOccurred(kind)}catch(_){}};
-const notify=(kind="success")=>{try{tg?.HapticFeedback?.notificationOccurred(kind)}catch(_){}};
-
-function showToast(text){clearTimeout(toastTimer);$("toast").textContent=text;$("toast").classList.add("show");toastTimer=setTimeout(()=>$("toast").classList.remove("show"),1800)}
-function burst(symbol="🥚"){const root=$("burst");root.innerHTML="";for(let i=0;i<14;i++){const p=document.createElement("span");const a=Math.PI*2*i/14+(Math.random()-.5)*.25;const d=90+Math.random()*150;p.className="particle";p.textContent=symbol;p.style.setProperty("--x",Math.cos(a)*d+"px");p.style.setProperty("--y",(Math.sin(a)*d-90)+"px");p.style.setProperty("--r",((Math.random()-.5)*280)+"deg");root.appendChild(p)}setTimeout(()=>root.innerHTML="",900)}
-
-function render(){
-  const rate=Math.round(state.rate*(Math.min(state.food,state.water,state.clean)/100*.35+.65));
-  $("eggBalance").textContent=fmt(state.eggs);
-  $("tonBalance").textContent=Number(state.demoTon).toFixed(2);
-  $("homeLevel").textContent=state.level;$("coopLevel").textContent=state.level;
-  $("upgradeLevel").textContent=state.level+1;$("nextLevel").textContent=state.level+1;
-  $("pendingEggs").textContent=fmt(state.pending);$("rateValue").textContent=fmt(rate);$("coopRate").textContent=fmt(rate);
-  $("marketEggs").textContent=fmt(state.eggs);
-  ["food","water","clean"].forEach(k=>{const v=Math.round(state[k]);$(k+"Value").textContent=v;$(k+"Bar").style.width=v+"%"});
-  $("buyLimit").textContent=state.dailyBuyUsed+" / 200";$("sellLimit").textContent=state.dailySellUsed+" / 25";
-  $("upgradeCost").textContent=fmt(levelCost());
-  $("outfitName").textContent=state.outfit;
-  document.querySelectorAll(".outfit").forEach(b=>{const on=b.dataset.outfit===state.outfit;b.classList.toggle("active",on);b.querySelector("small").textContent=on?"Надето":b.dataset.cost||b.querySelector("small").textContent});
-  if(state.rewardClaimed){$("dailyRewardBtn").textContent="Уже получено ✓";$("dailyRewardBtn").disabled=true}
+const tg = window.Telegram?.WebApp;
+const $ = id => document.getElementById(id);
+let state = null, session = null, config = {}, tonUI, busy = false, previous = 'home';
+const fmt = n => Math.floor(Number(n) || 0).toLocaleString('ru-RU');
+try { tg?.ready(); tg?.expand(); tg?.setHeaderColor('#090512'); tg?.setBackgroundColor('#090512'); } catch (_) {}
+function viewport() {
+  document.documentElement.style.setProperty('--tg-height', `${tg?.viewportStableHeight || innerHeight}px`);
+  document.documentElement.style.setProperty('--safe-top', `${tg?.contentSafeAreaInset?.top || 0}px`);
 }
-function levelCost(){return 2500+Math.max(0,state.level-12)*700}
-function navigate(name,{remember=true}={}){
-  const target=document.querySelector('[data-screen="'+name+'"]');if(!target)return;
-  if(remember&&name!==currentRoute)previousRoute=currentRoute;
-  currentRoute=name;
-  document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s===target));
-  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.route===name));
-  document.querySelector(".bottom-nav").style.display=["tasks","rewards","events","wardrobe"].includes(name)?"none":"grid";
-  window.scrollTo({top:0,behavior:"instant"});haptic();
+tg?.onEvent('viewportChanged', viewport); tg?.onEvent('contentSafeAreaChanged', viewport); viewport();
+let toastTimer;
+function toast(text) { clearTimeout(toastTimer); $('toast').textContent = text; $('toast').classList.add('show'); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 3500); }
+function navigate(name) {
+  if (!document.querySelector(`[data-screen="${name}"]`)) return;
+  previous = document.querySelector('.screen.active')?.dataset.screen || 'home';
+  document.querySelectorAll('.screen').forEach(n => n.classList.toggle('active', n.dataset.screen === name));
+  document.querySelectorAll('.nav-btn').forEach(n => n.classList.toggle('active', n.dataset.route === name));
+  try { tg?.HapticFeedback?.impactOccurred('light'); } catch (_) {}
+  scrollTo(0, 0);
 }
-document.querySelectorAll("[data-route]").forEach(b=>b.addEventListener("click",()=>navigate(b.dataset.route)));
-document.querySelectorAll("[data-back]").forEach(b=>b.addEventListener("click",()=>navigate(previousRoute||"home",{remember:false})));
-
-function spendEggs(cost){if(state.eggs<cost){showToast("Не хватает яиц 🥚");notify("error");return false}state.eggs-=cost;return true}
-document.querySelectorAll("[data-care]").forEach(b=>b.addEventListener("click",()=>{
-  const k=b.dataset.care,cost={food:600,water:300,clean:400}[k];if(!spendEggs(cost))return;state[k]=100;persist();render();burst(k==="water"?"💧":"✨");showToast("Люся довольна · "+fmt(cost)+" 🥚");notify();
-}));
-document.querySelector('[data-action="collect"]').addEventListener("click",()=>{state.eggs+=state.pending;state.pending=0;state.completedTasks.collect=true;persist();render();burst("🥚");showToast("Яйца собраны ✓");notify()});
-
-function openModal({icon="🐔",title="COCOCHI",text="",body="",actions=[]}){
-  $("modalIcon").textContent=icon;$("modalTitle").textContent=title;$("modalText").textContent=text;$("modalBody").innerHTML=body;$("modalActions").innerHTML="";
-  actions.forEach(a=>{const b=document.createElement("button");b.textContent=a.label;b.className=a.kind==="purple"?"purple-button":"gold-button";b.addEventListener("click",a.onClick);$("modalActions").appendChild(b)});
-  $("actionModal").classList.add("open");$("actionModal").setAttribute("aria-hidden","false");haptic("medium")
+async function api(path, data, key) {
+  const response = await fetch(path, {method: data === undefined ? 'GET' : 'POST', credentials: 'same-origin', headers: {'Content-Type':'application/json', 'X-Cocochi-Request':'1', ...(key ? {'Idempotency-Key':key} : {})}, ...(data !== undefined ? {body:JSON.stringify(data)} : {})});
+  const body = await response.json();
+  if (!response.ok) throw new Error(typeof body.detail === 'string' ? body.detail : 'Не удалось выполнить запрос');
+  return body;
 }
-function closeModal(){$("actionModal").classList.remove("open");$("actionModal").setAttribute("aria-hidden","true")}
-document.querySelectorAll('[data-action="closeModal"]').forEach(b=>b.addEventListener("click",closeModal));
-
-function marketModal(mode){
-  marketMode=mode;const isBuy=mode==="buy";
-  openModal({icon:isBuy?"🥚":"💎",title:isBuy?"Купить яйца":"Продать яйца",text:"DEMO-операция. Реальные платежи в MVP отключены.",
-    body:'<div class="amount-control"><button id="minusAmount">−</button><input id="marketAmount" type="number" min="1" max="100" value="10"><button id="plusAmount">+</button></div><div class="market-summary" id="marketSummary"></div>',
-    actions:[{label:isBuy?"Купить в DEMO":"Продать в DEMO",kind:isBuy?"purple":"gold",onClick:confirmMarket}]
+function render() {
+  if (!state) return;
+  for (const id of ['eggBalance','marketEggs']) $(id).textContent = fmt(state.eggs);
+  $('tonBalance').textContent = '—'; // wallet holdings are never invented
+  for (const id of ['homeLevel','coopLevel']) $(id).textContent = state.level;
+  for (const id of ['upgradeLevel','nextLevel']) $(id).textContent = state.level + 1;
+  $('pendingEggs').textContent = fmt(state.pending);
+  const rate = state.rate * (.25 + .75 * Math.min(state.food,state.water,state.clean) / 100);
+  for (const id of ['rateValue','coopRate']) $(id).textContent = fmt(rate);
+  for (const k of ['food','water','clean']) { $(k+'Value').textContent = Math.round(state[k]); $(k+'Bar').style.width = `${state[k]}%`; }
+  $('upgradeCost').textContent = fmt(state.upgradeCost);
+  $('sellLimit').textContent = `${state.sellRemaining} 🥚 осталось`;
+  $('buyLimit').textContent = '10 заказов / день';
+  $('outfitName').textContent = state.outfit;
+  window.cocochiAppearance=state.outfit; window.dispatchEvent(new CustomEvent('cocochi-state',{detail:state}));
+  document.querySelector('.mood-pill b').textContent = Math.min(state.food,state.water,state.clean)>60 ? 'Счастливая' : 'Нужен уход';
+  document.querySelectorAll('[data-care]').forEach(b=>b.querySelector('.care-cta').textContent=({food:'Покормить',water:'Напоить',clean:'Почистить'})[b.dataset.care]+' · '+state.catalog.care[b.dataset.care]+' 🥚');
+  document.querySelector('.wardrobe-preview').dataset.outfit = state.outfit;
+  document.querySelectorAll('.outfit').forEach(b => { const name = b.dataset.outfit; b.classList.toggle('active', name === state.outfit); b.querySelector('small').textContent = name === state.outfit ? 'Надето' : state.owned.includes(name) ? 'Надеть' : fmt(state.catalog.outfits[name])+' 🥚'; });
+  $('dailyRewardBtn').disabled = state.rewardClaimed;
+  $('dailyRewardBtn').textContent = state.rewardClaimed ? 'Сегодня получено ✓' : `Получить ${state.catalog.daily} 🥚`;
+  document.querySelectorAll('[data-task]').forEach(b => { const key = b.dataset.task; b.querySelector('em').textContent = '+'+state.catalog.tasks[key]+' 🥚'; b.querySelector('.claim').textContent = state.completedTasks[key] ? 'Получено' : 'Забрать'; });
+  $('friendCount').textContent = `${state.friends} приглашённых друзей`;
+  $('coinBalance').textContent = fmt(state.coins);
+  $('coopUpgradeBtn').textContent = `Курятник ${state.coopUpgrade.level}/10 · ${state.coopUpgrade.cost} монет`;
+  $('coopUpgradeBtn').disabled = state.coopUpgrade.level >= 10;
+  $('eventProgress').textContent = `${state.event.progress} / 100 🥚`;
+  $('eventButton').textContent = state.event.claimed ? 'Награда получена ✓' : state.event.joined ? 'Получить награду · 35 🥚' : 'Участвовать · 10 монет';
+  $('eventButton').disabled = state.event.claimed;
+  $('eventTime').textContent = 'ДО КОНЦА: ' + Math.max(0, Math.ceil((state.event.endsAt - Date.now()/1000)/3600)) + ' Ч';
+  $('ledgerHistory').replaceChildren();
+  for (const entry of state.history) {
+    const li = document.createElement('div'); li.className = 'limit-row';
+    const label = document.createElement('span'); label.textContent = `${({welcome:'Первый запуск',daily:'Ежедневная награда',collect:'Сбор яиц',care:'Уход',upgrade:'Новый уровень',outfit:'Гардероб',sell:'Обмен',coop:'Улучшение курятника',task:'Задание',event_entry:'Вход в событие',event_reward:'Награда события',stars_purchase:'Покупка Stars',refund_reserve:'Возврат'})[entry.type] || entry.type} · ${new Date(entry.created_at*1000).toLocaleDateString()}`;
+    const amount = document.createElement('b'); amount.textContent = `${entry.amount > 0 ? '+' : ''}${entry.amount} ${entry.asset==='eggs'?'🥚':'монет'}`;
+    li.append(label, amount); $('ledgerHistory').append(li);
+  }
+}
+async function refresh() { state = await api('/api/game'); render(); }
+// Preserve request key after uncertain network outcomes. No automatic duplicate spend.
+let pendingOperation = null;
+async function action(action, value = null) {
+  if (busy || !state) return;
+  const fingerprint = JSON.stringify([action,value]);
+  if (pendingOperation && pendingOperation.fingerprint !== fingerprint) return toast('Повторите предыдущее действие для проверки результата');
+  const key = pendingOperation?.key || crypto.randomUUID();
+  pendingOperation = {fingerprint, key}; busy = true;
+  try { state = await api('/api/game/action', {action,value}, key); pendingOperation = null; render(); toast('Готово ✓'); tg?.HapticFeedback?.notificationOccurred('success'); }
+  catch (error) { toast(error.message); if (!(error instanceof TypeError)) pendingOperation = null; }
+  finally { busy = false; }
+}
+document.querySelectorAll('[data-route]').forEach(b => b.onclick = () => navigate(b.dataset.route));
+document.querySelectorAll('[data-back]').forEach(b => b.onclick = () => navigate(previous));
+document.querySelectorAll('[data-care]').forEach(b => b.onclick = () => action('care', b.dataset.care));
+document.querySelectorAll('.outfit').forEach(b => b.onclick = () => action('outfit',b.dataset.outfit));
+document.querySelectorAll('[data-task]').forEach(b => b.onclick = () => action('task',b.dataset.task));
+document.querySelectorAll('[data-upgrade]').forEach(b => b.onclick = () => toast('Уровень производства улучшается в курятнике'));
+function modal(title, text, build) {
+  $('modalTitle').textContent = title; $('modalText').textContent = text;
+  $('modalBody').replaceChildren(); $('modalActions').replaceChildren();
+  build?.($('modalBody'),$('modalActions'));
+  $('actionModal').classList.add('open'); $('actionModal').setAttribute('aria-hidden','false');
+}
+function closeModal() { $('actionModal').classList.remove('open'); $('actionModal').setAttribute('aria-hidden','true'); }
+function button(label, fn, root) { const b = document.createElement('button'); b.className = 'gold-button full'; b.textContent = label; b.onclick = fn; root.append(b); }
+function buy() {
+  modal('Магазин Stars', 'Яйца — цифровой игровой товар без денежной стоимости.', (body,actions) => {
+    if (!config.starsEnabled || session?.demo) { body.textContent = 'Платежи пока недоступны. Играть и получать яйца можно бесплатно.'; return; }
+    for (const [sku,p] of Object.entries(state.catalog.packages)) button(`${p.eggs} 🥚 · ${p.stars} ⭐`, async () => {
+      if (busy) return; busy = true;
+      try {
+        const order = await api('/api/orders',{sku},crypto.randomUUID());
+        if (!tg?.openInvoice) throw new Error('Откройте приложение в Telegram');
+        tg.openInvoice(order.invoiceUrl, async status => { toast(status === 'paid' ? 'Платёж отправлен. Ожидаем подтверждение сервера.' : 'Статус: '+status); await refresh(); });
+        closeModal();
+      } catch (error) { toast(error.message); } finally { busy = false; }
+    }, actions);
   });
-  const input=$("marketAmount");const update=()=>{const amount=clamp(parseInt(input.value||"1",10),1,100);input.value=amount;$("marketSummary").textContent=amount+" 🥚  "+(isBuy?"←":"→")+"  "+(amount*.0042).toFixed(4)+" DEMO TON"};
-  $("minusAmount").onclick=()=>{input.value=Math.max(1,+input.value-1);update()};$("plusAmount").onclick=()=>{input.value=Math.min(100,+input.value+1);update()};input.oninput=update;update();
 }
-function confirmMarket(){
-  const amount=clamp(parseInt($("marketAmount").value||"1",10),1,100),ton=amount*.0042;
-  if(marketMode==="buy"){const rem=200-state.dailyBuyUsed;if(amount>rem)return showToast("Лимит покупки: "+rem+" 🥚");if(state.demoTon<ton)return showToast("Недостаточно DEMO TON");state.demoTon-=ton;state.eggs+=amount;state.dailyBuyUsed+=amount}
-  else{const rem=25-state.dailySellUsed;if(amount>rem)return showToast("Лимит продажи: "+rem+" 🥚");if(!spendEggs(amount))return;state.demoTon+=ton;state.dailySellUsed+=amount}
-  persist();render();closeModal();burst(marketMode==="buy"?"🥚":"💎");showToast("DEMO-операция выполнена ✓")
+function sell() {
+  modal('Обмен яиц', '1 яйцо → 2 внутренние монеты. Комиссия 0. Монеты нельзя вывести в TON.', (body,actions) => {
+    const input = document.createElement('input'); input.type='number'; input.min=1; input.max=Math.min(state.eggs,state.sellRemaining); input.value=10; input.className='amount-control';
+    const preview = document.createElement('p');
+    const update = () => { const n = Number(input.value); preview.textContent = `Получите: ${fmt(n*2)} монет · Остаток: ${fmt(state.eggs-n)} 🥚`; };
+    input.oninput=update; body.append(input,preview); update();
+    button('Обменять', async () => { await action('sell',Number(input.value)); closeModal(); },actions);
+  });
 }
-document.querySelectorAll('[data-action="buy"]').forEach(b=>b.addEventListener("click",()=>marketModal("buy")));
-document.querySelectorAll('[data-action="sell"]').forEach(b=>b.addEventListener("click",()=>marketModal("sell")));
-
-document.querySelectorAll("[data-upgrade]").forEach(b=>b.addEventListener("click",()=>{
-  const data={production:["Производство",5000,"+10% к яйцам/час"],energy:["Энергия",3500,"Быстрее восстановление"],health:["Здоровье",8000,"Стабильный бонус"]}[b.dataset.upgrade];
-  openModal({icon:"⚡",title:data[0],text:data[2]+" · стоимость "+fmt(data[1])+" 🥚",actions:[{label:"Улучшить · "+fmt(data[1])+" 🥚",onClick:()=>{if(!spendEggs(data[1]))return;state.rate=Math.round(state.rate*1.1);persist();render();closeModal();burst("⚡");showToast(data[0]+" улучшено ✓")}}]})
-}));
-
-function shareInvite(){
-  const uid=session?.user?.id;const username=config.botUsername||"cocochi_bot";const ref=uid?"https://t.me/"+username+"?start=ref_"+uid:"https://t.me/"+username;
-  const share="https://t.me/share/url?url="+encodeURIComponent(ref)+"&text="+encodeURIComponent("Заводи свою COCOCHI 🐔");
-  state.completedTasks.invite=true;persist();
-  try{tg?.openTelegramLink?tg.openTelegramLink(share):window.open(share,"_blank")}catch(_){window.open(share,"_blank")}
+function invite() {
+  const uid = session?.user?.id;
+  if (!uid) return toast('Приглашения доступны в Telegram');
+  const link = `https://t.me/${config.botUsername || 'cocochi_bot'}?startapp=ref_${uid}`;
+  const share = 'https://t.me/share/url?url='+encodeURIComponent(link);
+  if (tg?.openTelegramLink) tg.openTelegramLink(share); else window.open(share,'_blank','noopener');
 }
-document.querySelectorAll('[data-action="invite"]').forEach(b=>b.addEventListener("click",shareInvite));
-
-document.querySelector('[data-action="levelUp"]').addEventListener("click",()=>{const c=levelCost();if(!spendEggs(c))return;state.level++;state.rate=Math.round(state.rate*1.12);persist();render();burst("⭐");showToast("Новый уровень: "+state.level+" ✓")});
-
-document.querySelectorAll("[data-task]").forEach(b=>b.addEventListener("click",()=>{
-  const id=b.dataset.task;if(id==="invite"){shareInvite();return}
-  if(state.completedTasks[id+"_claimed"])return showToast("Награда уже получена");
-  const reward=id==="care"?250:500;state.eggs+=reward;state.completedTasks[id+"_claimed"]=true;persist();render();b.querySelector(".claim").textContent="Получено ✓";burst("🥚");showToast("+"+fmt(reward)+" 🥚")
-}));
-
-document.querySelector('[data-action="dailyReward"]').addEventListener("click",()=>{if(state.rewardClaimed)return;state.rewardClaimed=true;state.eggs+=2500;state.demoTon+=1;persist();render();burst("🎁");showToast("Награда получена: 2 500 🥚 + 1 TON");notify()});
-document.querySelector('[data-action="joinEvent"]').addEventListener("click",()=>{showToast("Ты участвуешь в EGG RUSH ⚡");burst("⚡")});
-
-document.querySelectorAll(".outfit").forEach(b=>b.addEventListener("click",()=>{
-  const name=b.dataset.outfit;if(name===state.outfit)return showToast("Этот образ уже надет");
-  const price={RoyalNeon:0,"Street Gold":2000,Cosmic:3500,Angel:5000}[name]||0;if(price&&!spendEggs(price))return;
-  state.outfit=name;persist();render();burst("✨");showToast("Образ «"+name+"» надет")
-}));
-
-document.querySelector('[data-action="language"]').addEventListener("click",()=>openModal({icon:"🌐",title:"Язык",text:"В текущем MVP активен русский интерфейс.",actions:[{label:"Русский ✓",kind:"purple",onClick:closeModal}]}));
-document.querySelector('[data-action="reset"]').addEventListener("click",()=>openModal({icon:"↻",title:"Сбросить DEMO?",text:"Баланс, уровень и прогресс вернутся к стартовому состоянию.",actions:[{label:"Сбросить DEMO",onClick:()=>{state=defaultState();persist();render();closeModal();navigate("home");showToast("DEMO сброшено")}}]}));
-
-async function ensureTon(){
-  if(tonUI)return tonUI;try{const mod=await import("https://cdn.jsdelivr.net/npm/@tonconnect/ui@2.3.1/+esm");tonUI=new mod.TonConnectUI({manifestUrl:location.origin+"/tonconnect-manifest.json",buttonRootId:"tonConnectMount"});return tonUI}catch(_){showToast("TON Connect недоступен в этом браузере");return null}
+async function ensureTon() {
+  if (tonUI) return tonUI;
+  const mod = await import('https://cdn.jsdelivr.net/npm/@tonconnect/ui@2.3.1/+esm');
+  tonUI = new mod.TonConnectUI({manifestUrl:location.origin+'/tonconnect-manifest.json',buttonRootId:'tonConnectMount'});
+  tonUI.onStatusChange(wallet => {
+    $('walletAddress').textContent = wallet ? `${wallet.account.address.slice(0,8)}…${wallet.account.address.slice(-6)} · ${wallet.account.chain === '-3' ? 'testnet' : 'mainnet'}` : 'Кошелёк не подключён';
+    // This is wallet UI state, never proof of account ownership on the backend.
+  });
+  await tonUI.connectionRestored;
+  return tonUI;
 }
-document.querySelectorAll('[data-action="wallet"]').forEach(b=>b.addEventListener("click",async()=>{navigate("profile");await ensureTon();try{await tonUI?.openModal()}catch(_){}}));
-
-async function loadSession(){
-  try{
-    const [c,s]=await Promise.all([fetch("/api/config"),fetch("/api/session",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({initData:tg?.initData||""})})]);
-    config=await c.json();session=await s.json();const u=session.user;
-    if(u){$("profileName").textContent=[u.first_name,u.last_name].filter(Boolean).join(" ")||u.username||"COCOCHI Player";$("profileId").textContent="@"+(u.username||u.id);$("refLink").textContent="https://t.me/"+(config.botUsername||"cocochi_bot")+"?start=ref_"+u.id}
-  }catch(_){}
+const actions = {
+  collect: () => action('collect'), levelUp: () => action('upgrade'), dailyReward: () => action('daily'), buy, sell, invite,
+  closeModal,
+  wallet: async () => { navigate('profile'); try { const ui = await ensureTon(); if (!ui.connected) await ui.openModal(); } catch (_) { toast('TON Connect недоступен. Попробуйте позже'); } },
+  disconnect: async () => { try { await tonUI?.disconnect(); } catch (_) { toast('Не удалось отключить кошелёк'); } },
+  testTransaction: async () => {
+    try {
+      const ui=await ensureTon();
+      if(!ui.connected) return toast('Сначала подключите testnet-кошелёк');
+      if(ui.account.chain!=='-3') return toast('Переключите кошелёк на testnet. Mainnet-переводы отключены.');
+      modal('Перевод себе в testnet','0.01 тестового TON на ваш же подключённый адрес. Кошелёк запросит подпись и сетевую комиссию. Это не покупка игровых товаров.',(_,buttons)=>{
+        button('Подписать в testnet',async()=>{
+          closeModal();$('tonTransactionStatus').textContent='Ожидается подпись в кошельке…';
+          try {
+            await ui.sendTransaction({validUntil:Math.floor(Date.now()/1000)+300,network:'-3',from:ui.account.address,messages:[{address:ui.account.address,amount:'10000000'}]});
+            $('tonTransactionStatus').textContent='Кошелёк вернул подписанную транзакцию. Подтверждение в блокчейне ещё не проверено.';
+          } catch(_) { $('tonTransactionStatus').textContent='Перевод отменён или кошелёк вернул ошибку. Начислений в игре нет.'; }
+        },buttons);
+      });
+    } catch(_) {toast('Не удалось загрузить TON Connect');}
+  },
+  language: () => toast('Русский интерфейс'), reset: () => toast('Серверный прогресс нельзя сбросить в браузере'),
+  joinEvent: () => action(state?.event.joined ? 'event_claim' : 'event_join'),
+  coopUpgrade: () => action('coop'),
+  payments: async () => {
+    try { const orders=await api('/api/orders'); modal('История платежей','При обращении в /paysupport укажите номер заказа.', body => { for(const o of orders) { const p=document.createElement('p'); p.textContent=`${o.id} · ${o.stars} ⭐ · ${o.status}`; body.append(p); } if(!orders.length) body.textContent='Заказов пока нет'; }); } catch(e) { toast(e.message); }
+  }
+};
+document.querySelectorAll('[data-action]').forEach(b => b.onclick=() => actions[b.dataset.action]?.());
+async function boot() {
+  document.body.classList.add('loading');
+  try {
+    config = await api('/api/config');
+    session = await api('/api/session',{initData:tg?.initData || ''});
+    const u=session.user;
+    if(u) { $('profileName').textContent=[u.first_name,u.last_name].filter(Boolean).join(' ') || u.username || 'Player'; $('profileId').textContent='@'+(u.username || u.id); $('refLink').textContent=`https://t.me/${config.botUsername || 'cocochi_bot'}?startapp=ref_${u.id}`; }
+    $('sessionStatus').textContent = session.demo ? 'Локальная демосессия · серверное сохранение' : 'Telegram · серверное сохранение';
+    await refresh();
+    ensureTon().catch(() => {});
+  } catch(error) { $('sessionStatus').textContent=error.message; toast(error.message); }
+  finally { document.body.classList.remove('loading'); }
 }
-
-function passiveTick(){const now=Date.now(),hours=clamp((now-(state.lastTick||now))/3600000,0,6);if(hours>0){state.pending+=state.rate*hours;state.food=clamp(state.food-hours*1.5,0,100);state.water=clamp(state.water-hours*2.2,0,100);state.clean=clamp(state.clean-hours*.7,0,100);state.lastTick=now;persist();render()}}
-passiveTick();render();loadSession();setInterval(passiveTick,30000);
+boot();
+setInterval(() => { if(state && !busy && !document.hidden) refresh().catch(() => {}); },30000);

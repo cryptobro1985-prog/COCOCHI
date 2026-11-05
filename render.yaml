@@ -2,19 +2,36 @@ services:
   - type: web
     name: cocochi-miniapp-mvp
     runtime: python
-    plan: free
+    plan: starter
     region: frankfurt
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT --proxy-headers
     healthCheckPath: /healthz
     envVars:
       - key: PYTHON_VERSION
-        value: 3.12.8
+        value: 3.12.14
+      - key: APP_ENV
+        value: production
+      - key: DEMO_ENABLED
+        value: "false"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cocochi-db
+          property: connectionString
       - key: BOT_TOKEN
-        sync: false
-      - key: PUBLIC_BASE_URL
         sync: false
       - key: TELEGRAM_WEBHOOK_SECRET
         generateValue: true
+      - key: STARS_ENABLED
+        value: "false"
+      - key: REAL_CASHOUT_ENABLED
+        value: "false"
       - key: APP_NAME
         value: COCOCHI
+# Paid persistent database. Review the price in Render before applying Blueprint.
+databases:
+  - name: cocochi-db
+    databaseName: cocochi
+    user: cocochi
+    plan: basic-256mb
+    region: frankfurt
