@@ -1,234 +1,75 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#120a27" />
-  <title>COCOCHI</title>
-  <link rel="stylesheet" href="/static/styles.css" />
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050308">
+<title>COCOCHI</title>
+<link rel="stylesheet" href="/static/v2.css?v=3">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-  <div id="app" class="app-shell">
-    <header class="topbar">
-      <div class="brand">
-        <div class="brand-mark">🐔</div>
-        <div>
-          <strong>COCOCHI</strong>
-          <span id="userLabel" class="muted">Tamagotchi economy</span>
-        </div>
-      </div>
-      <button id="walletQuick" class="wallet-pill" type="button">
-        <span class="wallet-dot"></span>
-        <span data-i18n="wallet">Кошелёк</span>
-      </button>
-    </header>
+<main class="app" id="app">
+<section class="art-screen active" id="homeScreen" aria-label="Главная COCOCHI">
+<img src="/static/cocochi-home.webp" alt="COCOCHI — главная, курица Люся" class="art">
+<div class="shine"></div>
+<button class="hotspot close" data-action="close" aria-label="Закрыть"></button>
+<button class="hotspot ton" data-action="wallet" aria-label="TON кошелёк"></button>
+<button class="hotspot ton-plus" data-action="wallet" aria-label="Пополнить TON"></button>
+<button class="hotspot eggs-plus" data-action="buy" aria-label="Купить яйца"></button>
+<button class="hotspot reward" data-action="reward" aria-label="Награды"></button>
+<button class="hotspot tasks" data-action="tasks" aria-label="Задания"></button>
+<button class="hotspot events" data-action="events" aria-label="События"></button>
+<button class="hotspot friends-side" data-action="friends" aria-label="Друзья"></button>
+<button class="hotspot collect" data-action="collect" aria-label="Собрать яйца"></button>
+<button class="hotspot feed" data-action="feed" aria-label="Кормить"></button>
+<button class="hotspot water" data-action="water" aria-label="Поить"></button>
+<button class="hotspot clean" data-action="clean" aria-label="Чистить"></button>
+<button class="hotspot clothes" data-action="clothes" aria-label="Одежда"></button>
+<button class="hotspot upgrade" data-screen="market" aria-label="Улучшение"></button>
+<button class="hotspot nav-home" data-screen="home" aria-label="Главная"></button>
+<button class="hotspot nav-market" data-screen="market" aria-label="Рынок"></button>
+<button class="hotspot nav-coop" data-action="coop" aria-label="Курятник"></button>
+<button class="hotspot nav-friends" data-action="friends" aria-label="Друзья"></button>
+<button class="hotspot nav-profile" data-action="profile" aria-label="Профиль"></button>
+</section>
 
-    <main>
-      <section id="screen-home" class="screen active">
-        <div class="hero-card">
-          <div class="hero-meta">
-            <div>
-              <span class="eyebrow" data-i18n="myChicken">МОЯ COCOCHI</span>
-              <h1 id="chickenName">Люся</h1>
-            </div>
-            <div class="level-badge"><span data-i18n="level">УР.</span> <b id="levelValue">1</b></div>
-          </div>
+<section class="art-screen" id="marketScreen" aria-label="Рынок COCOCHI">
+<img src="/static/cocochi-market.webp" alt="COCOCHI — рынок яиц" class="art">
+<div class="shine"></div>
+<button class="hotspot close" data-action="close" aria-label="Закрыть"></button>
+<button class="hotspot market-card" data-action="marketInfo" aria-label="Рынок яиц"></button>
+<button class="hotspot sell-big" data-action="sell" aria-label="Продать яйца"></button>
+<button class="hotspot buy-big" data-action="buy" aria-label="Купить яйца"></button>
+<button class="hotspot care-feed" data-action="feed" aria-label="Корм"></button>
+<button class="hotspot care-water" data-action="water" aria-label="Вода"></button>
+<button class="hotspot care-clean" data-action="clean" aria-label="Чистота"></button>
+<button class="hotspot prod-up" data-action="upgradeProduction" aria-label="Улучшить производство"></button>
+<button class="hotspot energy-up" data-action="upgradeEnergy" aria-label="Улучшить энергию"></button>
+<button class="hotspot health-up" data-action="upgradeHealth" aria-label="Улучшить здоровье"></button>
+<button class="hotspot invite" data-action="invite" aria-label="Пригласить друга"></button>
+<button class="hotspot nav-home" data-screen="home" aria-label="Главная"></button>
+<button class="hotspot nav-market" data-screen="market" aria-label="Рынок"></button>
+<button class="hotspot nav-coop" data-action="coop" aria-label="Курятник"></button>
+<button class="hotspot nav-friends" data-action="friends" aria-label="Друзья"></button>
+<button class="hotspot nav-profile" data-action="profile" aria-label="Профиль"></button>
+</section>
 
-          <div class="chicken-stage">
-            <div class="halo"></div>
-            <svg class="chicken" viewBox="0 0 320 320" role="img" aria-label="Курица Люся">
-              <defs>
-                <radialGradient id="bodyG" cx="45%" cy="30%" r="75%">
-                  <stop offset="0%" stop-color="#fff2b0"/>
-                  <stop offset="58%" stop-color="#f6c75c"/>
-                  <stop offset="100%" stop-color="#d88b22"/>
-                </radialGradient>
-                <linearGradient id="wingG" x1="0" x2="1">
-                  <stop offset="0%" stop-color="#f8d878"/>
-                  <stop offset="100%" stop-color="#d9962d"/>
-                </linearGradient>
-                <linearGradient id="redG" x1="0" x2="1">
-                  <stop offset="0%" stop-color="#ff7b5f"/>
-                  <stop offset="100%" stop-color="#d93651"/>
-                </linearGradient>
-                <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feDropShadow dx="0" dy="14" stdDeviation="12" flood-color="#000" flood-opacity=".35"/>
-                </filter>
-              </defs>
-              <ellipse cx="160" cy="281" rx="83" ry="19" fill="#000" opacity=".22"/>
-              <g filter="url(#shadow)">
-                <ellipse cx="160" cy="188" rx="91" ry="95" fill="url(#bodyG)"/>
-                <ellipse cx="104" cy="196" rx="43" ry="66" fill="url(#wingG)" transform="rotate(20 104 196)"/>
-                <ellipse cx="214" cy="195" rx="40" ry="63" fill="url(#wingG)" transform="rotate(-20 214 195)"/>
-                <circle cx="160" cy="112" r="63" fill="url(#bodyG)"/>
-                <path d="M126 58 C126 35 144 31 151 53 C154 31 177 31 177 54 C188 36 207 49 196 71" fill="url(#redG)"/>
-                <circle cx="140" cy="105" r="10" fill="#19152c"/>
-                <circle cx="183" cy="105" r="10" fill="#19152c"/>
-                <circle cx="137" cy="101" r="3.3" fill="#fff"/>
-                <circle cx="180" cy="101" r="3.3" fill="#fff"/>
-                <path d="M151 122 L197 135 L151 147 Z" fill="#ffad2f"/>
-                <path d="M146 153 C146 177 179 177 178 151 C168 160 157 161 146 153 Z" fill="url(#redG)"/>
-                <path d="M122 260 L111 285 M198 260 L209 285" stroke="#e5a32c" stroke-width="8" stroke-linecap="round"/>
-                <path d="M96 286 H124 M196 286 H224" stroke="#e5a32c" stroke-width="8" stroke-linecap="round"/>
-              </g>
-            </svg>
-            <div id="moodBubble" class="mood-bubble">❤️ <span data-i18n="happy">Счастливая</span></div>
-          </div>
-
-          <div class="egg-counter">
-            <div>
-              <span class="muted" data-i18n="readyToCollect">ГОТОВО К СБОРУ</span>
-              <strong><span id="pendingEggs">0.0</span> 🥚</strong>
-            </div>
-            <div class="rate"><span id="rateValue">4.2</span> <span data-i18n="perHour">яиц/час</span></div>
-          </div>
-          <button id="collectBtn" class="primary-btn" type="button">🥚 <span data-i18n="collect">Собрать яйца</span></button>
-        </div>
-
-        <div class="status-row">
-          <div class="status-card">
-            <div class="status-title"><span>🌽</span><span data-i18n="food">Еда</span><b id="foodValue">78%</b></div>
-            <div class="progress"><i id="foodBar"></i></div>
-            <button class="mini-btn action-care" type="button" data-care="food"><span data-i18n="feed">Покормить</span> · 15🥚</button>
-          </div>
-          <div class="status-card">
-            <div class="status-title"><span>💧</span><span data-i18n="water">Вода</span><b id="waterValue">64%</b></div>
-            <div class="progress"><i id="waterBar"></i></div>
-            <button class="mini-btn action-care" type="button" data-care="water"><span data-i18n="giveWater">Напоить</span> · 10🥚</button>
-          </div>
-          <div class="status-card">
-            <div class="status-title"><span>🫧</span><span data-i18n="clean">Чистота</span><b id="cleanValue">82%</b></div>
-            <div class="progress"><i id="cleanBar"></i></div>
-            <button class="mini-btn action-care" type="button" data-care="clean"><span data-i18n="cleanBtn">Почистить</span> · 8🥚</button>
-          </div>
-        </div>
-
-        <div class="upgrade-card">
-          <div>
-            <span class="eyebrow" data-i18n="upgrade">АПГРЕЙД КУРЫ</span>
-            <strong><span data-i18n="nextLevel">Следующий уровень</span> · <span id="upgradeCost">100</span>🥚</strong>
-            <small><span data-i18n="upgradeText">Больше яиц в час и новый внешний вид</span></small>
-          </div>
-          <button id="upgradeBtn" class="accent-btn" type="button"><span data-i18n="upgradeBtn">Улучшить</span></button>
-        </div>
-      </section>
-
-      <section id="screen-market" class="screen">
-        <div class="section-head">
-          <div>
-            <span class="eyebrow" data-i18n="market">РЫНОК</span>
-            <h2><span data-i18n="eggMarket">Egg Market</span></h2>
-          </div>
-          <div class="market-price">
-            <small data-i18n="demoPrice">DEMO PRICE</small>
-            <strong>0.0010 TON / 🥚</strong>
-          </div>
-        </div>
-
-        <div class="balance-panel">
-          <span data-i18n="yourEggs">Твои яйца</span>
-          <strong><span id="marketEggs">0</span> 🥚</strong>
-        </div>
-
-        <div class="limits-grid">
-          <div class="limit-card">
-            <span data-i18n="buyLimit">Лимит покупки</span>
-            <strong>200 🥚 / <span data-i18n="day">день</span></strong>
-            <div class="progress"><i style="width:30%"></i></div>
-            <small>60 / 200</small>
-          </div>
-          <div class="limit-card">
-            <span data-i18n="sellLimit">Лимит продажи</span>
-            <strong>25 🥚 / <span data-i18n="day">день</span></strong>
-            <div class="progress"><i style="width:16%"></i></div>
-            <small>4 / 25</small>
-          </div>
-        </div>
-
-        <div class="market-actions">
-          <button id="buyEggsBtn" class="primary-btn" type="button">➕ <span data-i18n="buyEggs">Купить яйца</span></button>
-          <button id="sellEggsBtn" class="secondary-btn" type="button">↗ <span data-i18n="sellEggs">Продать яйца</span></button>
-        </div>
-
-        <div class="info-card">
-          <b data-i18n="demoOnly">Сейчас это DEMO</b>
-          <p data-i18n="demoOnlyText">Кнопки рынка работают как симуляция. Реальные переводы TON в MVP отключены.</p>
-        </div>
-      </section>
-
-      <section id="screen-friends" class="screen">
-        <div class="friends-hero">
-          <div class="friends-emoji">🐔🤝🐔</div>
-          <span class="eyebrow" data-i18n="friends">ДРУЗЬЯ</span>
-          <h2 data-i18n="inviteTitle">Позови друга — обе куры несутся лучше</h2>
-          <p data-i18n="inviteText">Когда друг впервые запускает COCOCHI по твоей ссылке, тебе открывается дневной буст в демо-режиме.</p>
-          <div class="boost-badge">+10% · 24H</div>
-          <button id="shareBtn" class="primary-btn" type="button">🚀 <span data-i18n="inviteFriend">Позвать друга</span></button>
-        </div>
-        <div class="ref-card">
-          <span data-i18n="yourLink">Твоя ссылка</span>
-          <code id="refLink">Открой COCOCHI в Telegram</code>
-        </div>
-      </section>
-
-      <section id="screen-profile" class="screen">
-        <div class="profile-card">
-          <div class="profile-avatar">🐔</div>
-          <div>
-            <span class="eyebrow" data-i18n="profile">ПРОФИЛЬ</span>
-            <h2 id="profileName">COCOCHI Player</h2>
-            <p id="profileId" class="muted">Demo mode</p>
-          </div>
-        </div>
-
-        <div class="wallet-card">
-          <div>
-            <span class="eyebrow">TON CONNECT</span>
-            <h3 data-i18n="connectWallet">Подключить TON-кошелёк</h3>
-            <p data-i18n="connectWalletText">Подключение не даёт приложению доступ к seed-фразе или приватному ключу.</p>
-          </div>
-          <div id="ton-connect"></div>
-        </div>
-
-        <div class="settings-card">
-          <button id="langBtn" class="settings-btn" type="button">🌐 <span data-i18n="language">Язык</span><b id="langValue">RU</b></button>
-          <button id="resetBtn" class="settings-btn" type="button">↻ <span data-i18n="resetDemo">Сбросить DEMO</span><b>›</b></button>
-        </div>
-      </section>
-    </main>
-
-    <nav class="bottom-nav" aria-label="Навигация">
-      <button class="nav-btn active" data-screen="home" type="button"><span>🐔</span><small data-i18n="home">Кура</small></button>
-      <button class="nav-btn" data-screen="market" type="button"><span>🥚</span><small data-i18n="marketShort">Рынок</small></button>
-      <button class="nav-btn" data-screen="friends" type="button"><span>👥</span><small data-i18n="friendsShort">Друзья</small></button>
-      <button class="nav-btn" data-screen="profile" type="button"><span>👤</span><small data-i18n="profileShort">Профиль</small></button>
-    </nav>
-
-    <div id="languageModal" class="modal open" role="dialog" aria-modal="true" aria-labelledby="languageTitle">
-      <div class="modal-card">
-        <div class="modal-chicken">🐔</div>
-        <h2 id="languageTitle">Choose language / Выберите язык</h2>
-        <p class="muted">COCOCHI remembers your choice on this device.</p>
-        <button class="primary-btn language-choice" data-lang="ru" type="button">🇷🇺 Русский</button>
-        <button class="secondary-btn language-choice" data-lang="en" type="button">🇬🇧 English</button>
-      </div>
-    </div>
-
-    <div id="actionModal" class="modal" role="dialog" aria-modal="true">
-      <div class="modal-card">
-        <div class="modal-chicken">🥚</div>
-        <h2 id="actionTitle">DEMO Market</h2>
-        <p id="actionText" class="muted"></p>
-        <input id="marketAmount" class="amount-input" type="number" min="1" max="100" value="10" inputmode="numeric" />
-        <div id="actionSummary" class="action-summary"></div>
-        <button id="confirmMarketBtn" class="primary-btn" type="button">Подтвердить DEMO</button>
-        <button id="closeActionBtn" class="ghost-btn" type="button">Отмена</button>
-      </div>
-    </div>
-
-    <div id="toast" class="toast" aria-live="polite"></div>
-  </div>
-  <script type="module" src="/static/app.js"></script>
+<div class="toast" id="toast" aria-live="polite"></div>
+<div class="sheet" id="sheet" aria-hidden="true">
+<button class="backdrop" id="sheetBackdrop" aria-label="Закрыть"></button>
+<section class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+<div class="grab"></div>
+<div class="sheet-icon" id="sheetIcon">🥚</div>
+<h2 id="sheetTitle">COCOCHI</h2>
+<p id="sheetText"></p>
+<div id="tonConnectMount" class="ton-mount hidden"></div>
+<div class="sheet-actions" id="sheetActions"></div>
+<button class="sheet-close" id="sheetClose" type="button">Закрыть</button>
+</section>
+</div>
+<div class="burst" id="burst" aria-hidden="true"></div>
+</main>
+<script type="module" src="/static/v2.js?v=3"></script>
 </body>
 </html>
