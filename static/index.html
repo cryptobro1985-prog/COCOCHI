@@ -1,76 +1,250 @@
 <!doctype html>
 <html lang="ru">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#050308">
-<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-<title>COCOCHI</title>
-<link rel="stylesheet" href="/static/v2.css?v=6">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090512">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <title>COCOCHI</title>
+  <link rel="stylesheet" href="/static/v2.css?v=7">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-<main class="app" id="app">
-<section class="art-screen active" id="homeScreen" aria-label="Главная COCOCHI">
-<img src="/static/cocochi-home.webp?v=6" alt="COCOCHI — главная, курица Люся" class="art">
-<div class="shine"></div>
-<button class="hotspot close" data-action="close" aria-label="Закрыть"></button>
-<button class="hotspot ton" data-action="wallet" aria-label="TON кошелёк"></button>
-<button class="hotspot ton-plus" data-action="wallet" aria-label="Пополнить TON"></button>
-<button class="hotspot eggs-plus" data-action="buy" aria-label="Купить яйца"></button>
-<button class="hotspot reward" data-action="reward" aria-label="Награды"></button>
-<button class="hotspot tasks" data-action="tasks" aria-label="Задания"></button>
-<button class="hotspot events" data-action="events" aria-label="События"></button>
-<button class="hotspot friends-side" data-action="friends" aria-label="Друзья"></button>
-<button class="hotspot collect" data-action="collect" aria-label="Собрать яйца"></button>
-<button class="hotspot feed" data-action="feed" aria-label="Кормить"></button>
-<button class="hotspot water" data-action="water" aria-label="Поить"></button>
-<button class="hotspot clean" data-action="clean" aria-label="Чистить"></button>
-<button class="hotspot clothes" data-action="clothes" aria-label="Одежда"></button>
-<button class="hotspot upgrade" data-screen="market" aria-label="Улучшение"></button>
-<button class="hotspot nav-home" data-screen="home" aria-label="Главная"></button>
-<button class="hotspot nav-market" data-screen="market" aria-label="Рынок"></button>
-<button class="hotspot nav-coop" data-action="coop" aria-label="Курятник"></button>
-<button class="hotspot nav-friends" data-action="friends" aria-label="Друзья"></button>
-<button class="hotspot nav-profile" data-action="profile" aria-label="Профиль"></button>
-</section>
+<div class="app-shell">
+  <header class="topbar">
+    <button class="brand-button" data-route="home" aria-label="COCOCHI домой">
+      <span class="brand-mark">🐔</span>
+      <span><b>COCOCHI</b><small>MY CHICKEN</small></span>
+    </button>
+    <div class="top-balances">
+      <button class="balance-chip ton-chip" data-action="wallet"><span>💎</span><b id="tonBalance">1.25</b><small>TON</small></button>
+      <div class="balance-chip egg-chip"><span>🥚</span><b id="eggBalance">12 480</b><small>EGGS</small></div>
+    </div>
+  </header>
 
-<section class="art-screen" id="marketScreen" aria-label="Рынок COCOCHI">
-<img src="/static/cocochi-market.webp?v=6" alt="COCOCHI — рынок яиц" class="art">
-<div class="shine"></div>
-<button class="hotspot close" data-action="close" aria-label="Закрыть"></button>
-<button class="hotspot market-card" data-action="marketInfo" aria-label="Рынок яиц"></button>
-<button class="hotspot sell-big" data-action="sell" aria-label="Продать яйца"></button>
-<button class="hotspot buy-big" data-action="buy" aria-label="Купить яйца"></button>
-<button class="hotspot care-feed" data-action="feed" aria-label="Корм"></button>
-<button class="hotspot care-water" data-action="water" aria-label="Вода"></button>
-<button class="hotspot care-clean" data-action="clean" aria-label="Чистота"></button>
-<button class="hotspot prod-up" data-action="upgradeProduction" aria-label="Улучшить производство"></button>
-<button class="hotspot energy-up" data-action="upgradeEnergy" aria-label="Улучшить энергию"></button>
-<button class="hotspot health-up" data-action="upgradeHealth" aria-label="Улучшить здоровье"></button>
-<button class="hotspot invite" data-action="invite" aria-label="Пригласить друга"></button>
-<button class="hotspot nav-home" data-screen="home" aria-label="Главная"></button>
-<button class="hotspot nav-market" data-screen="market" aria-label="Рынок"></button>
-<button class="hotspot nav-coop" data-action="coop" aria-label="Курятник"></button>
-<button class="hotspot nav-friends" data-action="friends" aria-label="Друзья"></button>
-<button class="hotspot nav-profile" data-action="profile" aria-label="Профиль"></button>
-</section>
+  <main class="screen-stack" id="screenStack">
 
-<div class="toast" id="toast" aria-live="polite"></div>
-<div class="sheet" id="sheet" aria-hidden="true">
-<button class="backdrop" id="sheetBackdrop" aria-label="Закрыть"></button>
-<section class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-<div class="grab"></div>
-<div class="sheet-icon" id="sheetIcon">🥚</div>
-<h2 id="sheetTitle">COCOCHI</h2>
-<p id="sheetText"></p>
-<div id="tonConnectMount" class="ton-mount hidden"></div>
-<div class="sheet-actions" id="sheetActions"></div>
-<button class="sheet-close" id="sheetClose" type="button">Закрыть</button>
-</section>
+    <section class="screen active" data-screen="home">
+      <div class="hero hero-home">
+        <img src="/static/cocochi-home.webp?v=7" alt="Люся COCOCHI" class="hero-art">
+        <div class="hero-vignette"></div>
+        <div class="hero-head">
+          <div class="level-pill"><span>LV.</span><b id="homeLevel">12</b></div>
+          <div class="mood-pill"><span>💖</span><b>Счастливая</b></div>
+        </div>
+        <div class="hero-copy">
+          <span class="eyebrow">МОЯ COCOCHI</span>
+          <h1>Люся</h1>
+          <p><span class="online-dot"></span> несёт яйца прямо сейчас</p>
+        </div>
+        <div class="production-card">
+          <div><span>ГОТОВО К СБОРУ</span><strong><span id="pendingEggs">3 726</span> 🥚</strong></div>
+          <div class="rate"><b id="rateValue">248</b><small>яиц/час</small></div>
+          <button class="gold-button collect-button" data-action="collect">Собрать</button>
+        </div>
+      </div>
+
+      <div class="quick-grid">
+        <button class="quick-card purple" data-route="rewards"><span class="quick-icon">🎁</span><b>Награды</b><small>Бонус готов</small><i>→</i></button>
+        <button class="quick-card blue" data-route="tasks"><span class="quick-icon">⚡</span><b>Задания</b><small>3 активных</small><i>→</i></button>
+        <button class="quick-card orange" data-route="events"><span class="quick-icon">🏆</span><b>События</b><small>Egg Rush</small><i>→</i></button>
+        <button class="quick-card pink" data-route="wardrobe"><span class="quick-icon">👑</span><b>Гардероб</b><small>Новый образ</small><i>→</i></button>
+      </div>
+
+      <section class="panel care-panel">
+        <div class="section-title"><div><span class="eyebrow">УХОД</span><h2>Люсе нужен уход</h2></div><span class="tiny-pill">+15% бонус</span></div>
+        <div class="care-grid">
+          <button class="care-card" data-care="food">
+            <div class="care-icon food">🌽</div><div><b>Еда</b><small><span id="foodValue">78</span>%</small></div>
+            <div class="progress"><i id="foodBar"></i></div><span class="care-cta">Покормить</span>
+          </button>
+          <button class="care-card" data-care="water">
+            <div class="care-icon water">💧</div><div><b>Вода</b><small><span id="waterValue">64</span>%</small></div>
+            <div class="progress"><i id="waterBar"></i></div><span class="care-cta">Напоить</span>
+          </button>
+          <button class="care-card" data-care="clean">
+            <div class="care-icon clean">✨</div><div><b>Чистота</b><small><span id="cleanValue">82</span>%</small></div>
+            <div class="progress"><i id="cleanBar"></i></div><span class="care-cta">Почистить</span>
+          </button>
+        </div>
+      </section>
+
+      <button class="wide-feature upgrade-feature" data-route="coop">
+        <div class="feature-icon">🚀</div>
+        <div><span class="eyebrow">АПГРЕЙД</span><b>Улучшить Люсю до LV. <span id="nextLevel">13</span></b><small>Больше яиц, энергии и редких предметов</small></div>
+        <span class="chevron">›</span>
+      </button>
+    </section>
+
+    <section class="screen" data-screen="market">
+      <div class="page-hero market-hero">
+        <img src="/static/cocochi-market.webp?v=7" alt="" class="page-art">
+        <div class="page-overlay"></div>
+        <div class="page-hero-content">
+          <span class="eyebrow">COCOCHI ECONOMY</span>
+          <h1>Egg Market</h1>
+          <p>Покупай и продавай яйца в DEMO-режиме.</p>
+          <div class="market-ticker"><span>1 🥚</span><strong>0.0042 TON</strong><em>+6.8%</em></div>
+        </div>
+      </div>
+      <div class="two-actions">
+        <button class="big-action sell" data-action="sell"><span>↗</span><div><small>ПРОДАТЬ</small><b>Яйца</b></div></button>
+        <button class="big-action buy" data-action="buy"><span>↙</span><div><small>КУПИТЬ</small><b>Яйца</b></div></button>
+      </div>
+      <section class="panel">
+        <div class="section-title"><div><span class="eyebrow">МОЙ БАЛАНС</span><h2><span id="marketEggs">12 480</span> 🥚</h2></div><span class="tiny-pill">DEMO</span></div>
+        <div class="limit-row"><span>Лимит покупки сегодня</span><b id="buyLimit">140 / 200</b></div>
+        <div class="limit-row"><span>Лимит продажи сегодня</span><b id="sellLimit">4 / 25</b></div>
+      </section>
+      <section class="panel">
+        <div class="section-title"><div><span class="eyebrow">БУСТЕРЫ</span><h2>Ускорь производство</h2></div></div>
+        <button class="upgrade-row" data-upgrade="production"><span class="upgrade-round gold">⚡</span><div><b>Производство</b><small>+10% яиц в час</small></div><strong>5 000 🥚</strong></button>
+        <button class="upgrade-row" data-upgrade="energy"><span class="upgrade-round blue">💫</span><div><b>Энергия</b><small>Быстрее восстанавливается</small></div><strong>3 500 🥚</strong></button>
+        <button class="upgrade-row" data-upgrade="health"><span class="upgrade-round pink">❤️</span><div><b>Здоровье</b><small>Стабильный бонус</small></div><strong>8 000 🥚</strong></button>
+      </section>
+    </section>
+
+    <section class="screen" data-screen="coop">
+      <div class="page-hero coop-hero">
+        <img src="/static/cocochi-home.webp?v=7" alt="" class="page-art art-right">
+        <div class="page-overlay"></div>
+        <div class="page-hero-content">
+          <span class="eyebrow">КУРЯТНИК</span>
+          <h1>Дом Люси</h1>
+          <p>Прокачивай уровень, комфорт и производство.</p>
+        </div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><span>⭐</span><small>УРОВЕНЬ</small><b id="coopLevel">12</b></div>
+        <div class="stat-card"><span>🥚</span><small>В ЧАС</small><b id="coopRate">248</b></div>
+        <div class="stat-card"><span>🔥</span><small>СЕРИЯ</small><b>7 дней</b></div>
+      </div>
+      <section class="panel level-panel">
+        <div class="level-orb"><span>LV.</span><b id="upgradeLevel">13</b></div>
+        <div class="level-info"><span class="eyebrow">СЛЕДУЮЩИЙ УРОВЕНЬ</span><h2>Элитный курятник</h2><p>+12% к базовой продуктивности и новый визуальный эффект.</p></div>
+        <button class="gold-button full" data-action="levelUp">Улучшить · <span id="upgradeCost">2 500</span> 🥚</button>
+      </section>
+      <section class="panel">
+        <div class="section-title"><div><span class="eyebrow">КОМФОРТ</span><h2>Состояние курятника</h2></div></div>
+        <div class="comfort-item"><span>🌡️</span><div><b>Температура</b><small>Идеальная</small></div><strong>24°C</strong></div>
+        <div class="comfort-item"><span>💡</span><div><b>Освещение</b><small>12 часов</small></div><strong>100%</strong></div>
+        <div class="comfort-item"><span>🛏️</span><div><b>Уют</b><small>Премиум</small></div><strong>92%</strong></div>
+      </section>
+    </section>
+
+    <section class="screen" data-screen="friends">
+      <div class="friends-hero page-hero">
+        <div class="friends-avatars"><span>🐔</span><span>🐥</span><span>🐔</span></div>
+        <div class="page-hero-content centered">
+          <span class="eyebrow">КОМАНДА COCOCHI</span>
+          <h1>Друзья усиливают кур</h1>
+          <p>Приглашай друзей и открывай совместные бустеры.</p>
+        </div>
+      </div>
+      <button class="invite-hero" data-action="invite"><span>👥</span><div><small>ТВОЙ БОНУС</small><b>+10% к производству</b><p>За каждого активного друга</p></div><i>Пригласить</i></button>
+      <section class="panel">
+        <div class="section-title"><div><span class="eyebrow">МОЯ КОМАНДА</span><h2>3 друга</h2></div><span class="tiny-pill success">+30%</span></div>
+        <div class="friend-row"><span class="avatar a1">🐥</span><div><b>Alex</b><small>LV. 8 · онлайн</small></div><strong>+10%</strong></div>
+        <div class="friend-row"><span class="avatar a2">🐔</span><div><b>Nikita</b><small>LV. 14 · 2 мин назад</small></div><strong>+10%</strong></div>
+        <div class="friend-row"><span class="avatar a3">🐣</span><div><b>Kate</b><small>LV. 5 · онлайн</small></div><strong>+10%</strong></div>
+      </section>
+      <section class="panel referral-panel">
+        <span class="eyebrow">РЕФЕРАЛЬНАЯ ССЫЛКА</span>
+        <code id="refLink">Открой COCOCHI внутри Telegram</code>
+        <button class="purple-button full" data-action="invite">Скопировать и пригласить</button>
+      </section>
+    </section>
+
+    <section class="screen" data-screen="profile">
+      <div class="profile-hero">
+        <div class="profile-avatar" id="profileAvatar">🐔</div>
+        <span class="eyebrow">ПРОФИЛЬ</span>
+        <h1 id="profileName">COCOCHI Player</h1>
+        <p id="profileId">Telegram Mini App</p>
+      </div>
+      <section class="panel wallet-panel">
+        <div class="wallet-glow"></div>
+        <div class="section-title"><div><span class="eyebrow">TON WALLET</span><h2>Подключи кошелёк</h2></div><span class="wallet-status">● SAFE</span></div>
+        <p>Приложение не получает seed-фразу или приватный ключ.</p>
+        <div id="tonConnectMount" class="ton-mount"></div>
+        <button class="purple-button full" data-action="wallet">Подключить TON</button>
+      </section>
+      <section class="panel settings-panel">
+        <button class="setting-row" data-action="language"><span>🌐</span><div><b>Язык</b><small>Русский</small></div><i>›</i></button>
+        <button class="setting-row" data-route="wardrobe"><span>👑</span><div><b>Мой гардероб</b><small>6 предметов</small></div><i>›</i></button>
+        <button class="setting-row" data-route="rewards"><span>🎁</span><div><b>История наград</b><small>12 получено</small></div><i>›</i></button>
+        <button class="setting-row danger" data-action="reset"><span>↻</span><div><b>Сбросить DEMO</b><small>Начать заново</small></div><i>›</i></button>
+      </section>
+    </section>
+
+    <section class="screen sub-screen" data-screen="tasks">
+      <div class="sub-header"><button data-back>‹</button><div><span class="eyebrow">COCOCHI</span><h1>Задания</h1></div><span class="sub-icon">⚡</span></div>
+      <div class="task-feature">
+        <span class="task-feature-icon">🏆</span><div><small>НЕДЕЛЬНАЯ ЦЕЛЬ</small><b>5 / 7 выполнено</b><div class="task-progress"><i style="width:71%"></i></div></div><strong>+2 000 🥚</strong>
+      </div>
+      <div class="task-list">
+        <button class="task-card" data-task="care"><span class="task-icon green">✨</span><div><b>Позаботься о Люсе</b><small>Покорми, напои или почисти</small></div><em>+250 🥚</em><i class="claim">Забрать</i></button>
+        <button class="task-card" data-task="collect"><span class="task-icon gold">🥚</span><div><b>Собери яйца</b><small>Собери производство 1 раз</small></div><em>+500 🥚</em><i class="claim">Забрать</i></button>
+        <button class="task-card" data-task="invite"><span class="task-icon purple">👥</span><div><b>Позови друга</b><small>Отправь реферальную ссылку</small></div><em>+1 000 🥚</em><i class="claim locked">Открыть</i></button>
+      </div>
+    </section>
+
+    <section class="screen sub-screen" data-screen="rewards">
+      <div class="sub-header"><button data-back>‹</button><div><span class="eyebrow">БОНУСЫ</span><h1>Награды</h1></div><span class="sub-icon">🎁</span></div>
+      <div class="reward-chest">
+        <div class="reward-rays"></div><span class="chest">🎁</span><span class="eyebrow">ЕЖЕДНЕВНАЯ НАГРАДА</span><h2>День 7</h2><p>Твоя серия растёт. Сегодня особенный бонус.</p><strong>2 500 🥚 + 1 💎</strong>
+        <button class="gold-button full" data-action="dailyReward" id="dailyRewardBtn">Забрать награду</button>
+      </div>
+      <div class="week-row"><span class="done">1<br><b>✓</b></span><span class="done">2<br><b>✓</b></span><span class="done">3<br><b>✓</b></span><span class="done">4<br><b>✓</b></span><span class="done">5<br><b>✓</b></span><span class="done">6<br><b>✓</b></span><span class="today">7<br><b>🎁</b></span></div>
+    </section>
+
+    <section class="screen sub-screen" data-screen="events">
+      <div class="sub-header"><button data-back>‹</button><div><span class="eyebrow">LIVE</span><h1>События</h1></div><span class="sub-icon">🏆</span></div>
+      <article class="event-card event-primary">
+        <div class="event-graphic">🥚⚡🥚</div><span class="event-live">LIVE · 02:14:38</span><h2>EGG RUSH</h2><p>Двойное производство на протяжении события. Собери как можно больше яиц.</p><div class="event-prize"><span>Твой результат</span><b>18 420 🥚</b></div><button class="gold-button full" data-action="joinEvent">Участвовать</button>
+      </article>
+      <article class="event-card event-purple"><div class="event-graphic">👑</div><span>СКОРО</span><h2>ROYAL COCOCHI</h2><p>Сезонный турнир гардероба и редких предметов.</p><button class="ghost-button full">Подробнее</button></article>
+    </section>
+
+    <section class="screen sub-screen" data-screen="wardrobe">
+      <div class="sub-header"><button data-back>‹</button><div><span class="eyebrow">СТИЛЬ</span><h1>Гардероб</h1></div><span class="sub-icon">👑</span></div>
+      <div class="wardrobe-preview">
+        <img src="/static/cocochi-home.webp?v=7" alt="Люся" class="wardrobe-art">
+        <div class="wardrobe-caption"><span>ТЕКУЩИЙ ОБРАЗ</span><b id="outfitName">Royal Neon</b></div>
+      </div>
+      <div class="outfit-grid">
+        <button class="outfit active" data-outfit="Royal Neon"><span>👑</span><b>Royal</b><small>Надето</small></button>
+        <button class="outfit" data-outfit="Street Gold"><span>😎</span><b>Street</b><small>2 000 🥚</small></button>
+        <button class="outfit" data-outfit="Cosmic"><span>🚀</span><b>Cosmic</b><small>3 500 🥚</small></button>
+        <button class="outfit" data-outfit="Angel"><span>✨</span><b>Angel</b><small>5 000 🥚</small></button>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="bottom-nav" aria-label="Основная навигация">
+    <button class="nav-btn active" data-route="home"><span>🐔</span><small>Люся</small></button>
+    <button class="nav-btn" data-route="market"><span>🥚</span><small>Рынок</small></button>
+    <button class="nav-btn" data-route="coop"><span>🏠</span><small>Курятник</small></button>
+    <button class="nav-btn" data-route="friends"><span>👥</span><small>Друзья</small></button>
+    <button class="nav-btn" data-route="profile"><span>👤</span><small>Профиль</small></button>
+  </nav>
+
+  <div class="modal" id="actionModal" aria-hidden="true">
+    <button class="modal-backdrop" data-action="closeModal" aria-label="Закрыть"></button>
+    <section class="modal-card">
+      <div class="modal-grab"></div>
+      <span class="modal-icon" id="modalIcon">🥚</span>
+      <h2 id="modalTitle">COCOCHI</h2>
+      <p id="modalText"></p>
+      <div id="modalBody"></div>
+      <div class="modal-actions" id="modalActions"></div>
+      <button class="modal-close" data-action="closeModal">Закрыть</button>
+    </section>
+  </div>
+  <div class="toast" id="toast" aria-live="polite"></div>
+  <div class="burst" id="burst"></div>
 </div>
-<div class="burst" id="burst" aria-hidden="true"></div>
-</main>
-<script type="module" src="/static/v2.js?v=6"></script>
+<script type="module" src="/static/v2.js?v=7"></script>
 </body>
 </html>

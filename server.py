@@ -20,7 +20,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
 WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET", "").strip()
 APP_NAME = os.getenv("APP_NAME", "COCOCHI")
-APP_VERSION = "6"
+APP_VERSION = "7"
 
 BOT_USERNAME = ""
 BOOT_STATUS = {
@@ -149,7 +149,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="COCOCHI MVP", version="0.1.3", lifespan=lifespan)
+app = FastAPI(title="COCOCHI MVP", version="0.1.4", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
