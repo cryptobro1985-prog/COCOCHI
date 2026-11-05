@@ -1,0 +1,2 @@
+# Preserve upstream third-party sources without applying project whitespace rules.
+static/vendor/** -whitespace
