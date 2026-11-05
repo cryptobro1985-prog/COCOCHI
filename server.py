@@ -7,7 +7,7 @@ import secrets
 
 import database as db
 import game_service as game
-from sqlalchemy import select, insert, delete
+from sqlalchemy import select, insert
 from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import parse_qsl
@@ -29,8 +29,6 @@ APP_VERSION = "8"
 PRODUCTION = os.getenv("APP_ENV") == "production"
 DEMO_ENABLED = not PRODUCTION and os.getenv("DEMO_ENABLED", "true").lower() == "true"
 STARS_ENABLED = os.getenv("STARS_ENABLED", "false").lower() == "true"
-OPTIONS_ALERT_SECRET = os.getenv("OPTIONS_ALERT_SECRET", "").strip()
-OPTIONS_AUTO_SUBSCRIBE_SINGLE_USER = os.getenv("OPTIONS_AUTO_SUBSCRIBE_SINGLE_USER", "false").lower() == "true"
 if PRODUCTION and (not BOT_TOKEN or not WEBHOOK_SECRET or not PUBLIC_BASE_URL.startswith("https://")):
     raise RuntimeError("Production requires BOT_TOKEN, TELEGRAM_WEBHOOK_SECRET and HTTPS PUBLIC_BASE_URL")
 if os.getenv("REAL_CASHOUT_ENABLED", "false").lower() == "true":
@@ -60,50 +58,6 @@ async def tg_call(method: str, payload: dict | None = None) -> dict:
         if not body.get("ok"):
             raise RuntimeError("Telegram API returned ok=false")
         return body
-
-
-def ensure_options_subscription(chat_id: int) -> bool:
-    if type(chat_id) is not int or chat_id <= 0:
-        return False
-    with db.transaction() as conn:
-        exists = conn.execute(
-            select(db.options_subscriptions.c.chat_id).where(db.options_subscriptions.c.chat_id == chat_id)
-        ).scalar()
-        if exists is None:
-            conn.execute(insert(db.options_subscriptions).values(chat_id=chat_id, created_at=int(time.time())))
-            return True
-    return False
-
-
-def auto_subscribe_options_if_unique() -> None:
-    if not OPTIONS_AUTO_SUBSCRIBE_SINGLE_USER:
-        return
-    try:
-        now = int(time.time())
-        with db.transaction() as conn:
-            existing = list(conn.execute(select(db.options_subscriptions.c.chat_id)).scalars())
-            if existing:
-                print("COCOCHI_OPTIONS auto_subscribe=SKIP existing_subscription", flush=True)
-                return
-            active = list(
-                conn.execute(
-                    select(db.sessions.c.user_id)
-                    .where(db.sessions.c.expires_at > now, db.sessions.c.user_id > 0)
-                    .distinct()
-                ).scalars()
-            )
-            candidates = active
-            if len(candidates) != 1:
-                candidates = list(
-                    conn.execute(select(db.users.c.id).where(db.users.c.id > 0)).scalars()
-                )
-            if len(candidates) == 1:
-                conn.execute(insert(db.options_subscriptions).values(chat_id=int(candidates[0]), created_at=now))
-                print("COCOCHI_OPTIONS auto_subscribe=OK count=1", flush=True)
-            else:
-                print(f"COCOCHI_OPTIONS auto_subscribe=SKIP candidates={len(candidates)}", flush=True)
-    except Exception as exc:
-        print(f"COCOCHI_OPTIONS auto_subscribe=FAILED error={type(exc).__name__}", flush=True)
 
 
 async def refresh_bot_identity() -> None:
@@ -163,8 +117,6 @@ async def configure_bot_ui() -> None:
                     {"command": "start", "description": "Открыть COCOCHI"},
                     {"command": "play", "description": "Играть в COCOCHI"},
                     {"command": "paysupport", "description": "Помощь с оплатой"},
-                    {"command": "options", "description": "PANDORA Options сигналы"},
-                    {"command": "options_off", "description": "Отключить Options сигналы"},
                 ]
             },
         )
@@ -197,7 +149,6 @@ async def configure_bot_ui() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     game.initialize()
-    auto_subscribe_options_if_unique()
     await refresh_bot_identity()
     await configure_webhook()
     await configure_bot_ui()
@@ -280,45 +231,6 @@ async def config(request: Request):
         "realCashoutEnabled": False,
         "realPaymentsEnabled": False,
     }
-
-
-class OptionsAlertInput(BaseModel):
-    kind: StrictStr = "ALERT"
-    text: StrictStr
-
-
-@app.post("/internal/options-alert")
-async def internal_options_alert(
-    data: OptionsAlertInput,
-    x_options_alert_secret: str | None = Header(default=None),
-):
-    if not OPTIONS_ALERT_SECRET or not hmac.compare_digest(x_options_alert_secret or "", OPTIONS_ALERT_SECRET):
-        raise HTTPException(status_code=403, detail="Bad options alert secret")
-    kind = data.kind.strip().upper()
-    allowed = {"ALERT", "ENTRY", "HOLD", "X2_HOLD", "TAKE_PROFIT", "EXIT", "STARTUP", "TEST"}
-    text = data.text.strip()
-    if kind not in allowed or not text or len(text) > 3500:
-        raise HTTPException(status_code=400, detail="Invalid options alert")
-    with db.engine.connect() as conn:
-        chat_ids = list(conn.execute(select(db.options_subscriptions.c.chat_id)).scalars())
-    sent = 0
-    failed = 0
-    for chat_id in chat_ids:
-        try:
-            await tg_call(
-                "sendMessage",
-                {
-                    "chat_id": int(chat_id),
-                    "text": text,
-                    "parse_mode": "HTML",
-                    "disable_web_page_preview": True,
-                },
-            )
-            sent += 1
-        except Exception:
-            failed += 1
-    print(f"COCOCHI_OPTIONS delivery kind={kind} subscribers={len(chat_ids)} sent={sent} failed={failed}", flush=True)
-    return {"ok": True, "subscribers": len(chat_ids), "sent": sent, "failed": failed}
 
 
 class SessionInput(BaseModel):
@@ -519,32 +431,6 @@ async def telegram_webhook(
     if message.get('successful_payment'):
         game.credit_payment(user_id, message['successful_payment'])
         return {'ok': True}
-    if text == "/options" and chat_id and str(chat.get("type") or "") == "private":
-        created = ensure_options_subscription(int(chat_id))
-        await tg_call(
-            "sendMessage",
-            {
-                "chat_id": chat_id,
-                "text": (
-                    "✅ PANDORA OPTIONS включены.\n"
-                    "Сюда будут приходить BUY / HOLD / SELL сигналы по BTC, ETH и SOL.\n"
-                    "Исполнение сделок остаётся ручным."
-                ),
-            },
-        )
-        print(f"COCOCHI_OPTIONS subscribe={'NEW' if created else 'EXISTING'}", flush=True)
-        return {"ok": True}
-
-    if text == "/options_off" and chat_id and str(chat.get("type") or "") == "private":
-        with db.transaction() as conn:
-            conn.execute(delete(db.options_subscriptions).where(db.options_subscriptions.c.chat_id == int(chat_id)))
-        await tg_call(
-            "sendMessage",
-            {"chat_id": chat_id, "text": "PANDORA OPTIONS сигналы отключены."},
-        )
-        print("COCOCHI_OPTIONS unsubscribe=OK", flush=True)
-        return {"ok": True}
-
     if text == '/paysupport' and chat_id:
         await tg_call('sendMessage', {'chat_id': chat_id, 'text': 'Payment support: send your order ID from the COCOCHI payment history to the bot owner. Never send private keys or passwords.'})
         return {'ok': True}
