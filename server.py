@@ -22,12 +22,20 @@ WEBHOOK_SECRET = os.getenv("TELEGRAM_WEBHOOK_SECRET", "").strip()
 APP_NAME = os.getenv("APP_NAME", "COCOCHI")
 
 BOT_USERNAME = ""
+BOOT_STATUS = {
+    "bot_identity": False,
+    "webhook": False,
+    "commands": False,
+    "menu_button": False,
+}
 PENDING_REFERRALS: dict[int, int] = {}
+
 
 def telegram_api(method: str) -> str:
     if not BOT_TOKEN:
         raise RuntimeError("BOT_TOKEN is not configured")
     return f"https://api.telegram.org/bot{BOT_TOKEN}/{method}"
+
 
 async def tg_call(method: str, payload: dict | None = None) -> dict:
     async with httpx.AsyncClient(timeout=15.0) as client:
@@ -35,21 +43,32 @@ async def tg_call(method: str, payload: dict | None = None) -> dict:
         response.raise_for_status()
         body = response.json()
         if not body.get("ok"):
-            raise RuntimeError(f"Telegram API error: {body}")
+            raise RuntimeError("Telegram API returned ok=false")
         return body
+
 
 async def refresh_bot_identity() -> None:
     global BOT_USERNAME
     if not BOT_TOKEN:
+        print("COCOCHI_BOOT bot_identity=SKIP no_token", flush=True)
         return
     try:
         body = await tg_call("getMe")
         BOT_USERNAME = body.get("result", {}).get("username", "") or ""
+        BOOT_STATUS["bot_identity"] = bool(BOT_USERNAME)
+        print(
+            f"COCOCHI_BOOT bot_identity={'OK' if BOT_USERNAME else 'EMPTY'} "
+            f"username=@{BOT_USERNAME or 'unknown'}",
+            flush=True,
+        )
     except Exception:
         BOT_USERNAME = ""
+        print("COCOCHI_BOOT bot_identity=FAILED", flush=True)
+
 
 async def configure_webhook() -> None:
     if not BOT_TOKEN or not PUBLIC_BASE_URL:
+        print("COCOCHI_BOOT webhook=SKIP missing_config", flush=True)
         return
     payload = {
         "url": f"{PUBLIC_BASE_URL}/telegram/webhook",
@@ -60,11 +79,18 @@ async def configure_webhook() -> None:
         payload["secret_token"] = WEBHOOK_SECRET
     try:
         await tg_call("setWebhook", payload)
+        BOOT_STATUS["webhook"] = True
+        print(
+            f"COCOCHI_BOOT webhook=OK url={PUBLIC_BASE_URL}/telegram/webhook",
+            flush=True,
+        )
     except Exception:
-        pass
+        print("COCOCHI_BOOT webhook=FAILED", flush=True)
+
 
 async def configure_bot_ui() -> None:
     if not BOT_TOKEN:
+        print("COCOCHI_BOOT commands=SKIP no_token", flush=True)
         return
     try:
         await tg_call(
@@ -76,10 +102,13 @@ async def configure_bot_ui() -> None:
                 ]
             },
         )
+        BOOT_STATUS["commands"] = True
+        print("COCOCHI_BOOT commands=OK", flush=True)
     except Exception:
-        pass
+        print("COCOCHI_BOOT commands=FAILED", flush=True)
 
     if not PUBLIC_BASE_URL:
+        print("COCOCHI_BOOT menu_button=SKIP no_public_url", flush=True)
         return
 
     try:
@@ -93,26 +122,41 @@ async def configure_bot_ui() -> None:
                 }
             },
         )
+        BOOT_STATUS["menu_button"] = True
+        print("COCOCHI_BOOT menu_button=OK", flush=True)
     except Exception:
-        pass
+        print("COCOCHI_BOOT menu_button=FAILED", flush=True)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await refresh_bot_identity()
     await configure_webhook()
     await configure_bot_ui()
+    print(
+        "COCOCHI_BOOT ready "
+        f"bot={BOOT_STATUS['bot_identity']} "
+        f"webhook={BOOT_STATUS['webhook']} "
+        f"commands={BOOT_STATUS['commands']} "
+        f"menu={BOOT_STATUS['menu_button']}",
+        flush=True,
+    )
     yield
 
-app = FastAPI(title="COCOCHI MVP", version="0.1.1", lifespan=lifespan)
+
+app = FastAPI(title="COCOCHI MVP", version="0.1.2", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 
 @app.get("/")
 async def root():
     return RedirectResponse("/app")
 
+
 @app.get("/app")
 async def mini_app():
     return FileResponse(STATIC_DIR / "index.html")
+
 
 @app.get("/healthz")
 async def health():
@@ -122,7 +166,9 @@ async def health():
         "bot_configured": bool(BOT_TOKEN),
         "public_base_url_configured": bool(PUBLIC_BASE_URL),
         "bot_username": BOT_USERNAME or None,
+        "telegram": BOOT_STATUS,
     }
+
 
 @app.get("/api/config")
 async def config(request: Request):
@@ -135,8 +181,10 @@ async def config(request: Request):
         "realPaymentsEnabled": False,
     }
 
+
 class SessionInput(BaseModel):
     initData: str = ""
+
 
 def validate_init_data(init_data: str, max_age_seconds: int = 86400) -> dict:
     if not init_data:
@@ -182,6 +230,7 @@ def validate_init_data(init_data: str, max_age_seconds: int = 86400) -> dict:
         "startParam": pairs.get("start_param"),
     }
 
+
 @app.post("/api/session")
 async def session(data: SessionInput):
     result = validate_init_data(data.initData)
@@ -190,6 +239,7 @@ async def session(data: SessionInput):
     if user_id and user_id in PENDING_REFERRALS:
         result["referrerId"] = PENDING_REFERRALS.get(user_id)
     return result
+
 
 @app.get("/tonconnect-manifest.json")
 async def ton_manifest(request: Request):
@@ -204,6 +254,7 @@ async def ton_manifest(request: Request):
         }
     )
 
+
 def extract_referrer(text: str) -> int | None:
     if not text:
         return None
@@ -217,6 +268,7 @@ def extract_referrer(text: str) -> int | None:
         return int(arg[4:])
     except ValueError:
         return None
+
 
 @app.post("/telegram/webhook")
 async def telegram_webhook(
