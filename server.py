@@ -63,13 +63,47 @@ async def configure_webhook() -> None:
     except Exception:
         pass
 
+async def configure_bot_ui() -> None:
+    if not BOT_TOKEN:
+        return
+    try:
+        await tg_call(
+            "setMyCommands",
+            {
+                "commands": [
+                    {"command": "start", "description": "Открыть COCOCHI"},
+                    {"command": "play", "description": "Играть в COCOCHI"},
+                ]
+            },
+        )
+    except Exception:
+        pass
+
+    if not PUBLIC_BASE_URL:
+        return
+
+    try:
+        await tg_call(
+            "setChatMenuButton",
+            {
+                "menu_button": {
+                    "type": "web_app",
+                    "text": "Играть в COCOCHI",
+                    "web_app": {"url": f"{PUBLIC_BASE_URL}/app"},
+                }
+            },
+        )
+    except Exception:
+        pass
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await refresh_bot_identity()
     await configure_webhook()
+    await configure_bot_ui()
     yield
 
-app = FastAPI(title="COCOCHI MVP", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="COCOCHI MVP", version="0.1.1", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.get("/")
@@ -87,6 +121,7 @@ async def health():
         "app": APP_NAME,
         "bot_configured": bool(BOT_TOKEN),
         "public_base_url_configured": bool(PUBLIC_BASE_URL),
+        "bot_username": BOT_USERNAME or None,
     }
 
 @app.get("/api/config")
